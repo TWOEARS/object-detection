@@ -31,7 +31,7 @@ InitStart(const objectdetection_Camera *Camera,
     cv::Mat frame;
     cv::Mat cvHomography(3, 3, CV_32F);
     std::vector<Rect> bounding;
-    Rect object;
+    Rect object, R1, R2;
 
     cv::namedWindow("output", cv::WINDOW_AUTOSIZE);
     
@@ -75,7 +75,7 @@ InitStart(const objectdetection_Camera *Camera,
 						    outPts.at(2).x, outPts.at(2).y,
 						    outPts.at(3).x, outPts.at(3).y);
                 bounding.push_back(Rect(outPts.at(0).x,outPts.at(0).y,outPts.at(3).x-outPts.at(0).x,outPts.at(3).y-outPts.at(0).y));
-                cv::rectangle(frame, bounding.at(i), cv::Scalar(0, 0, 255));
+                //cv::rectangle(frame, bounding.at(i), cv::Scalar(0, 0, 255));
             }
 
             //Find where the rectangles overlap and consider that the position of the object.
@@ -93,7 +93,13 @@ InitStart(const objectdetection_Camera *Camera,
                 }
                 if(bounding.size()>2)
                 {
-                    
+                    object = bounding.at(0) & bounding.at(1);
+                    for(j=2; j<bounding.size(); j++)
+                    {
+                        R1 = object;
+                        R2 = bounding.at(j);
+                        object = R1 & R2;
+                    }
                 }
             }
             if(object.area()>0)
