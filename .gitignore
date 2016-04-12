@@ -1,0 +1,14 @@
+*~
+Makefile.am
+codels/Makefile.am
+Makefile.in
+aclocal.m4
+autoconf/
+autom4te.cache/
+*.pc.in
+bootstrap.sh
+build/
+configure
+configure.ac
+*.pro
+*.pro.user
