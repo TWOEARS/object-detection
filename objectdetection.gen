@@ -89,5 +89,6 @@ component objectdetection{
 To compile: genom3 skeleton -l c++ -i objectdetection.gen
 
 ::objectdetection::connect_port Camera /stereo/left/image_rect_color
+::objectdetection::connect_port inObjects /objects
 
 */
