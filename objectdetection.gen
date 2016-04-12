@@ -74,8 +74,13 @@ component objectdetection{
         period      33 ms;
         priority    100;
         stack       4000;
+    };
 
-        codel<start> InitFindObjects(port in Camera, port in inObjects) yield start, ether;
+    activity Start()
+    {
+        codel<start> InitStart(port in Camera, port in inObjects) yield start, ether;
+
+        task FindObjects;
     };
 };
 

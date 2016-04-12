@@ -28,8 +28,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef	DETECTIONO_STRUCT_H
-#define	DETECTIONO_STRUCT_H
+#ifndef	FINDOBJECT2D_STRUCT_H
+#define	FINDOBJECT2D_STRUCT_H
 
 module find_object_2d
 {
