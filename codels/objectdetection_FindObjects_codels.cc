@@ -45,6 +45,7 @@ InitStart(const char *objectPath, genom_context self)
     int i;
     char *filePath=NULL;
     char *inputPath=NULL;
+    char *tmpName=NULL;
     char tmp[150];
     size_t len1, len2, leninputPath;
     DIR *dir;
@@ -89,9 +90,13 @@ InitStart(const char *objectPath, genom_context self)
     numObj = objectNames.size();
     for (i=0; i<numObj; i++)
     {
-        models[i].name = (char *) malloc((strlen(objectNames.at(i))+1)*sizeof(char));
-        strcpy(models[i].name, objectNames.at(i));
+        tmpName = (char *) malloc((strlen(objectNames.at(i))+1)*sizeof(char));
+        strcpy(tmpName, objectNames.at(i));
+        tmpName[strlen(tmpName)-4] = '\0';  //removes .txt
+        models[i].name = (char *) malloc((strlen(tmpName)+1)*sizeof(char));
+        strcpy(models[i].name, tmpName);
     }
+
     printf("Names: %d\n", numObj);
     for (i=0; i<numObj; i++)
     {
@@ -104,7 +109,7 @@ InitStart(const char *objectPath, genom_context self)
     filePath = NULL;
     for (i=0; i<numObj; i++)
     {
-        printf("objectNames.at(%d): %s\n", i,  models[i].name);
+        printf("models[%d].name: %s\n", i,  models[i].name);
         printf("FULL PATH: %s%s\n", inputPath, models[i].name);
 
         filePath = (char *) malloc((strlen(inputPath)+strlen(models[i].name)+1)*sizeof(char));
