@@ -43,7 +43,9 @@ genom_event
 InitStart(const char *objectPath, genom_context self)
 {
     int i;
-    char *filePath, *inputPath, *tmpPath, tmp[150];
+    char *filePath=NULL;
+    char *inputPath=NULL;
+    char tmp[150];
     size_t len1, len2, leninputPath;
     DIR *dir;
     FILE *pFile;
@@ -69,7 +71,7 @@ InitStart(const char *objectPath, genom_context self)
             if(strcmp(ent->d_name, ".") && strcmp(ent->d_name, ".."))
             {
                 objectNames.push_back(ent->d_name);
-                //printf("%s saved\n", ent->d_name);
+                //printf("%s saved [%d]\n", ent->d_name, strlen(ent->d_name));
             }
         }
         closedir(dir);
@@ -80,20 +82,37 @@ InitStart(const char *objectPath, genom_context self)
         return objectdetection_ether;
     }
     printf("inputPath: %s\n", inputPath);
+    leninputPath = strlen(inputPath);
     
     models = (objectsData *) malloc(objectNames.size()*sizeof(struct objectsData));
-    printf("Files's list:\n");
-    // Retrieve file names to struct.
+    //Copy file name as "model's name"
     numObj = objectNames.size();
     for (i=0; i<numObj; i++)
     {
-        printf("%s [%d]\n", objectNames.at(i), strlen(objectNames.at(i)));
-        filePath = (char *) malloc((strlen(inputPath)+strlen(objectNames.at(i))+1)*sizeof(char));
-        strcpy(filePath, inputPath);
-        strcat(filePath, objectNames.at(i));
-        printf("filePath: %s\n", filePath);
+        models[i].name = (char *) malloc((strlen(objectNames.at(i))+1)*sizeof(char));
+        strcpy(models[i].name, objectNames.at(i));
+    }
+    printf("Names: %d\n", numObj);
+    for (i=0; i<numObj; i++)
+    {
+        printf("Model %d: %s\n", i, models[i].name);
+    }
+    
+    filePath = NULL;
+    printf("Files's list:\n");
+    // Retrieve file names to struct.
+    filePath = NULL;
+    for (i=0; i<numObj; i++)
+    {
+        printf("objectNames.at(%d): %s\n", i,  models[i].name);
+        printf("FULL PATH: %s%s\n", inputPath, models[i].name);
 
+        filePath = (char *) malloc((strlen(inputPath)+strlen(models[i].name)+1)*sizeof(char));
+        strcpy(filePath, inputPath);
+        strcat(filePath, models[i].name);
+        printf("filePath: %s\n\n", filePath);
         free(filePath);
+
     }
     printf("end for\n");
 
