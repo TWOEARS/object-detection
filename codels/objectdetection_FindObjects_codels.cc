@@ -61,11 +61,6 @@ InitStart(const char *objectPath, genom_context self)
         sprintf(inputPath, "%s/", objectPath);
     }
 
-    printf("1 - inputPath: %s\n", inputPath);
-    //tmpPath = (char *) malloc(strlen(inputPath)*sizeof(char));
-    //strcpy(tmpPath, inputPath);
-    //printf("2 - tmpPath: %s\n", tmpPath);
-
     if((dir = opendir(inputPath)) != NULL)
     {
         while((ent=readdir(dir)) != NULL)
@@ -84,12 +79,8 @@ InitStart(const char *objectPath, genom_context self)
         printf("Directory [%s] could not be opened.\n", inputPath);
         return objectdetection_ether;
     }
-    printf("3 - inputPath: %s\n", inputPath);
-    //printf("4 - tmpPath: %s\n", tmpPath);
-    //strcpy(inputPath, tmpPath);
-    //printf("5 - inputPath: %s\n", inputPath);
+    printf("inputPath: %s\n", inputPath);
     
-
     models = (objectsData *) malloc(objectNames.size()*sizeof(struct objectsData));
     printf("Files's list:\n");
     // Retrieve file names to struct.
@@ -97,7 +88,12 @@ InitStart(const char *objectPath, genom_context self)
     for (i=0; i<numObj; i++)
     {
         printf("%s [%d]\n", objectNames.at(i), strlen(objectNames.at(i)));
+        filePath = (char *) malloc((strlen(inputPath)+strlen(objectNames.at(i))+1)*sizeof(char));
+        strcpy(filePath, inputPath);
+        strcat(filePath, objectNames.at(i));
+        printf("filePath: %s\n", filePath);
 
+        free(filePath);
     }
     printf("end for\n");
 
