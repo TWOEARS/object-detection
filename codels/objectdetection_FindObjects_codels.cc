@@ -3,6 +3,7 @@
 #include "objectdetection_c_types.h"
 
 #include <stdio.h>
+#include <dirent.h>
 
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
@@ -14,15 +15,102 @@ using namespace std;
 /* --- Task FindObjects ------------------------------------------------- */
 
 std::vector<cv::Point2f> inPts, outPts;
+std::vector<char *> objectNames;
+
+struct objectsData
+{
+    char* name;
+    int ID;
+    uint32_t length;
+    int* buffer;
+    std::vector<Rect> bounding;
+};
+objectsData* models;
+int numObj;
+
 /* --- Activity Start --------------------------------------------------- */
+
+/* Function's Headers*/
+Rect commonArea(std::vector<Rect> bounding);
+/* Function's Headers*/
 
 /** Codel InitStart of activity Start.
  *
  * Triggered by objectdetection_start.
- * Yields to objectdetection_start, objectdetection_ether.
+ * Yields to objectdetection_exec, objectdetection_ether.
  */
 genom_event
-InitStart(const objectdetection_Camera *Camera,
+InitStart(const char *objectPath, genom_context self)
+{
+    int i;
+    char *filePath, *inputPath, *tmpPath, tmp[150];
+    size_t len1, len2, leninputPath;
+    DIR *dir;
+    FILE *pFile;
+    struct dirent *ent;
+
+    //Check if path ends with /, if not add it.
+    if(objectPath[strlen(objectPath)-1] == '/')
+    {
+        inputPath = (char *) malloc((strlen(objectPath)+1)*sizeof(char));
+        strcpy(inputPath, objectPath);
+    }
+    else
+    {
+        inputPath = (char *) malloc((strlen(objectPath)+1)*sizeof(char));
+        sprintf(inputPath, "%s/", objectPath);
+    }
+
+    printf("1 - inputPath: %s\n", inputPath);
+    //tmpPath = (char *) malloc(strlen(inputPath)*sizeof(char));
+    //strcpy(tmpPath, inputPath);
+    //printf("2 - tmpPath: %s\n", tmpPath);
+
+    if((dir = opendir(inputPath)) != NULL)
+    {
+        while((ent=readdir(dir)) != NULL)
+        {
+            //printf("%s\n", ent->d_name);
+            if(strcmp(ent->d_name, ".") && strcmp(ent->d_name, ".."))
+            {
+                objectNames.push_back(ent->d_name);
+                //printf("%s saved\n", ent->d_name);
+            }
+        }
+        closedir(dir);
+    }
+    else
+    {
+        printf("Directory [%s] could not be opened.\n", inputPath);
+        return objectdetection_ether;
+    }
+    printf("3 - inputPath: %s\n", inputPath);
+    //printf("4 - tmpPath: %s\n", tmpPath);
+    //strcpy(inputPath, tmpPath);
+    //printf("5 - inputPath: %s\n", inputPath);
+    
+
+    models = (objectsData *) malloc(objectNames.size()*sizeof(struct objectsData));
+    printf("Files's list:\n");
+    // Retrieve file names to struct.
+    numObj = objectNames.size();
+    for (i=0; i<numObj; i++)
+    {
+        printf("%s [%d]\n", objectNames.at(i), strlen(objectNames.at(i)));
+
+    }
+    printf("end for\n");
+
+    return objectdetection_exec;
+}
+
+/** Codel ExecStart of activity Start.
+ *
+ * Triggered by objectdetection_exec.
+ * Yields to objectdetection_exec, objectdetection_ether.
+ */
+genom_event
+ExecStart(const objectdetection_Camera *Camera,
           const objectdetection_inObjects *inObjects,
           genom_context self)
 {
@@ -80,28 +168,7 @@ InitStart(const objectdetection_Camera *Camera,
 
             //Find where the rectangles overlap and consider that the position of the object.
             printf("Total of bounding boxes: %d\n", bounding.size());
-            if(bounding.size()>0)
-            {
-                if(bounding.size() == 1)
-                    object = bounding.at(0);
-                if(bounding.size() == 2)
-                {
-                    object = bounding.at(0) & bounding.at(1);
-                        if(!(object.area()>0))
-                            object = Rect(0,0,0,0);
-                    
-                }
-                if(bounding.size()>2)
-                {
-                    object = bounding.at(0) & bounding.at(1);
-                    for(j=2; j<bounding.size(); j++)
-                    {
-                        R1 = object;
-                        R2 = bounding.at(j);
-                        object = R1 & R2;
-                    }
-                }
-            }
+            object = commonArea(bounding);
             if(object.area()>0)
                 cv::rectangle(frame, object, cv::Scalar(0, 255, 0));
 
@@ -112,12 +179,50 @@ InitStart(const objectdetection_Camera *Camera,
 
     if(cv::waitKey(30) == -1)
     {
-        return objectdetection_start;
+        return objectdetection_exec;
     }
     else
     {
         frame.release();
         cvHomography.release();
+        /*for(i=0; i<numObj; i++)
+        {
+            free(models[i].name);
+        }*/
+        free(models);
+        objectNames.resize(0);
         return objectdetection_ether;
     }
+}
+
+
+/* Functions */
+Rect commonArea(std::vector<Rect> bounding)
+{
+    int i;
+    Rect object, R1, R2;
+
+    if(bounding.size()>0)
+    {
+        if(bounding.size() == 1)
+            object = bounding.at(0);
+        if(bounding.size() == 2)
+        {
+            object = bounding.at(0) & bounding.at(1);
+            if(!(object.area()>0))
+                object = Rect(0,0,0,0);
+            
+        }
+        if(bounding.size()>2)
+        {
+            object = bounding.at(0) & bounding.at(1);
+            for(i=2; i<bounding.size(); i++)
+            {
+                R1 = object;
+                R2 = bounding.at(i);
+                object = R1 & R2;
+            }
+        }
+    }
+    return object;
 }

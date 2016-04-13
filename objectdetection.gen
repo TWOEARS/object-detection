@@ -76,9 +76,10 @@ component objectdetection{
         stack       4000;
     };
 
-    activity Start()
+    activity Start(in string objectPath = "/tmp/objects/")
     {
-        codel<start> InitStart(port in Camera, port in inObjects) yield start, ether;
+        codel<start> InitStart(local in objectPath) yield exec, ether;
+        codel<exec> ExecStart(port in Camera, port in inObjects) yield exec, ether;
 
         task FindObjects;
     };
