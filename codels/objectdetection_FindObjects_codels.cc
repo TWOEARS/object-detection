@@ -42,15 +42,16 @@ Rect commonArea(std::vector<Rect> bounding);
 genom_event
 InitStart(const char *objectPath, genom_context self)
 {
-    int i;
+    int i, j, count;;
     char *filePath=NULL;
     char *inputPath=NULL;
     char *tmpName=NULL;
     char tmp[150];
-    size_t len1, len2, leninputPath;
+    size_t len;
     DIR *dir;
     FILE *pFile;
     struct dirent *ent;
+    std::vector<int> tmpNum;
 
     //Check if path ends with /, if not add it.
     if(objectPath[strlen(objectPath)-1] == '/')
@@ -83,7 +84,6 @@ InitStart(const char *objectPath, genom_context self)
         return objectdetection_ether;
     }
     printf("inputPath: %s\n", inputPath);
-    leninputPath = strlen(inputPath);
     
     models = (objectsData *) malloc(objectNames.size()*sizeof(struct objectsData));
     //Copy file name as "model's name"
@@ -112,10 +112,33 @@ InitStart(const char *objectPath, genom_context self)
         printf("models[%d].name: %s\n", i,  models[i].name);
         printf("FULL PATH: %s%s\n", inputPath, models[i].name);
 
-        filePath = (char *) malloc((strlen(inputPath)+strlen(models[i].name)+1)*sizeof(char));
-        strcpy(filePath, inputPath);
-        strcat(filePath, models[i].name);
+        filePath = (char *) malloc((strlen(inputPath)+strlen(models[i].name)+4+1)*sizeof(char));    //+4 to add .txt and +1 for '\0'.
+        sprintf(filePath, "%s%s.txt", inputPath, models[i].name);
         printf("filePath: %s\n\n", filePath);
+
+        pFile = fopen(filePath, "r");
+        if(pFile==NULL)
+        {
+            printf("--(!)Error loading file %s\n", filePath); 
+            return objectdetection_ether;
+        };
+        count = 0;
+        while(fgets(tmp, 150, pFile) != NULL)
+        {
+            count++;
+            len = strlen(tmp);
+            if(len>0 && tmp[len-1]=='\n')
+                tmp[--len] = '\0';
+
+            tmpNum.push_back(atoi(tmp));
+        }
+        models[i].length = tmpNum.size();
+        models[i].buffer = (int *) malloc(models[i].length*sizeof(int));
+        for(j=0; j<models[i].length; j++)
+            models[i].buffer[j] = tmpNum.at(j);
+
+        tmpNum.resize(0);
+        fclose(pFile);        
         free(filePath);
 
     }
@@ -208,7 +231,9 @@ ExecStart(const objectdetection_Camera *Camera,
         for(i=0; i<numObj; i++)
         {
             free(models[i].name);
+            free(models[i].buffer);
         }
+
         free(models);
         objectNames.resize(0);
         return objectdetection_ether;
