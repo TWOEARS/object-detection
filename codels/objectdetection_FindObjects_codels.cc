@@ -137,12 +137,13 @@ InitStart(const char *objectPath, genom_context self)
         for(j=0; j<models[i].length; j++)
             models[i].buffer[j] = tmpNum.at(j);
 
-        tmpNum.resize(0);
+        models[i].ID = i;
+        models[j].bounding.resize(0);
+
         fclose(pFile);        
         free(filePath);
 
     }
-    printf("end for\n");
 
     return objectdetection_exec;
 }
@@ -157,7 +158,7 @@ ExecStart(const objectdetection_Camera *Camera,
           const objectdetection_inObjects *inObjects,
           genom_context self)
 {
-    int i, j;
+    int i, j, k;
     float objectWidth, objectHeight;
     cv::Mat frame;
     cv::Mat cvHomography(3, 3, CV_32F);
@@ -166,6 +167,13 @@ ExecStart(const objectdetection_Camera *Camera,
 
     cv::namedWindow("output", cv::WINDOW_AUTOSIZE);
     
+    /*for(i=0; i<numObj; i++)
+    {
+        printf("Files in %s: ", models[i].name);
+        for(j=0; j<models[i].length; j++)
+            printf("%d ", models[i].buffer[j]);
+        printf("\n");
+    }*/
 
     Camera->read(self);
     if(Camera->data(self) != NULL)
@@ -205,15 +213,43 @@ ExecStart(const objectdetection_Camera *Camera,
 						    outPts.at(1).x, outPts.at(1).y,
 						    outPts.at(2).x, outPts.at(2).y,
 						    outPts.at(3).x, outPts.at(3).y);
+
+                // Find to which model the ID from find_object_2d (/object topic) belongs to.
+                for(j=0; j<numObj; j++)
+                {
+                    printf("Current ID from /objects topic: %d\n", (int) inObjects->data(self)->data._buffer[12*i]);
+                    printf("Model: %s [%d]: ", models[j].name, models[j].length);
+                    for(k=0; k<models[j].length; k++)
+                        printf("%d ", models[j].buffer[k]);
+                    printf("\n");
+                    for(k=0; k<models[j].length; k++)
+                    {
+                        //printf("Comparing %d and %d\n", (int) inObjects->data(self)->data._buffer[12*i], models[j].buffer[k]);
+                        if((int) inObjects->data(self)->data._buffer[12*i] == models[j].buffer[k])
+                        {
+                            printf("MATCH %d belongs to %s\n", (int) inObjects->data(self)->data._buffer[12*i], models[j].name);
+                            //models[j].bounding.push_back(Rect(outPts.at(0).x,outPts.at(0).y,outPts.at(3).x-outPts.at(0).x,outPts.at(3).y-outPts.at(0).y));
+                            break;
+                        }
+                    }
+                }                
                 bounding.push_back(Rect(outPts.at(0).x,outPts.at(0).y,outPts.at(3).x-outPts.at(0).x,outPts.at(3).y-outPts.at(0).y));
                 //cv::rectangle(frame, bounding.at(i), cv::Scalar(0, 0, 255));
             }
 
             //Find where the rectangles overlap and consider that the position of the object.
-            printf("Total of bounding boxes: %d\n", bounding.size());
+            printf("Total of bounding boxes: %d\n", (int) bounding.size());
             object = commonArea(bounding);
             if(object.area()>0)
                 cv::rectangle(frame, object, cv::Scalar(0, 255, 0));
+
+            /*//Find where the rectangles overlap and consider that the position of the object.
+            for(i=0; i<numObj; i++)
+            {
+                object = commonArea(models[i].bounding);
+                if(object.area()>0)
+                    cv::rectangle(frame, object, cv::Scalar(255, 255, 0));
+            }*/
 
             printf("\n");
         }
