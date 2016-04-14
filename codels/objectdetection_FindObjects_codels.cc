@@ -205,10 +205,10 @@ ExecStart(const objectdetection_Camera *Camera,
     {
         frame.release();
         cvHomography.release();
-        /*for(i=0; i<numObj; i++)
+        for(i=0; i<numObj; i++)
         {
             free(models[i].name);
-        }*/
+        }
         free(models);
         objectNames.resize(0);
         return objectdetection_ether;
