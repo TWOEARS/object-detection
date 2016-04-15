@@ -233,7 +233,7 @@ ExecStart(const objectdetection_Camera *Camera,
                         }
                     }
                 }                
-                bounding.push_back(Rect(outPts.at(0).x,outPts.at(0).y,outPts.at(3).x-outPts.at(0).x,outPts.at(3).y-outPts.at(0).y));
+                bounding.push_back(Rect(outPts.at(0).x, outPts.at(0).y, objectWidth, objectHeight));
                 //cv::rectangle(frame, bounding.at(i), cv::Scalar(0, 0, 255));
             }
 
