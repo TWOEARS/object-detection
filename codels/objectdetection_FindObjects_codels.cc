@@ -15,8 +15,8 @@ using namespace std;
 /* --- Task FindObjects ------------------------------------------------- */
 
 std::vector<cv::Point2f> inPts, outPts;
-//std::vector<char *> objectNames;
 
+//std::vector<char *> objectNames;
 uint32_t NobjectNames=0;
 char **objectNames, **tmpobjectNames;
 
@@ -56,7 +56,8 @@ InitStart(const char *objectPath, genom_context self)
     DIR *dir;
     FILE *pFile;
     struct dirent *ent;
-    std::vector<int> tmpNum;
+    //std::vector<int> tmpNum;
+    int *tmpNum, *auxNum, NtmpNum=0;
 
     //Check if path ends with /, if not add it.
     if(objectPath[strlen(objectPath)-1] == '/')
@@ -137,6 +138,7 @@ InitStart(const char *objectPath, genom_context self)
     
     models = (objectsData *) malloc(NobjectNames*sizeof(struct objectsData));
     //Copy file name as "model's name"
+    printf("NobjectNames: %d\n", NobjectNames);
     numObj = NobjectNames;
     for (i=0; i<numObj; i++)
     {
@@ -157,7 +159,8 @@ InitStart(const char *objectPath, genom_context self)
     printf("Files's list:\n");
     // Retrieve file names to struct.
     filePath = NULL;
-    for (i=0; i<numObj; i++)
+    printf("numObj: %d\n", numObj);
+    for (i=0; i<numObj-1; i++)
     {
         printf("models[%d].name: %s\n", i,  models[i].name);
         printf("FULL PATH: %s%s\n", inputPath, models[i].name);
@@ -178,32 +181,73 @@ InitStart(const char *objectPath, genom_context self)
             count++;
             len = strlen(tmp);
             if(len>0 && tmp[len-1]=='\n')
+            {
                 tmp[--len] = '\0';
+                printf("STRING tmp: %s\n", tmp);
+                printf("NtmpNum: %d\n", NtmpNum);
+                //tmpNum.push_back(atoi(tmp));
+                if(NtmpNum == 0)
+                {
+                    NtmpNum++;
+                    tmpNum = (int *) malloc(sizeof(int));
+                    tmpNum[0] = atoi(tmp);
+                    printf("NtmpNUM=0: tmpNum[0]: %d\n", tmpNum[0]);
+                }
+                else
+                {
+                    //Save current numers to a tmp array.
+                    auxNum = (int *) malloc(NtmpNum*sizeof(int));
+                    for(j=0; j<NtmpNum; j++)
+                    {
+                        auxNum[j] = tmpNum[j];
+                        printf("tmpNum[%d]: %d - auxNum[%d]: %d\n", j, tmpNum[j], j, tmpNum[j]); 
+                    }
 
-            tmpNum.push_back(atoi(tmp));
+                    //Deallocate 'old' tmpNum array.
+                    free(tmpNum);
+                    NtmpNum++;
+                    //Allocate tmpNum array with one more (new) element.
+                    tmpNum = (int *) malloc(NtmpNum*sizeof(int));
+                    //Copy elements from 'old' array to the new one.
+                    printf("After malloc: ");
+                    for(j=0; j<NtmpNum-1; j++)
+                    {
+                        printf("%d ", auxNum[j]);
+                        tmpNum[j] = auxNum[j];
+                    }
+                    printf("\n");
+                    //Copy new element to array.
+                    tmpNum[j] = atoi(tmp);
+                    printf("After copy new element: ");
+                    for(j=0; j<NtmpNum; j++)
+                        printf("%d ", tmpNum[j]);
+                    printf("\n");
+                    free(auxNum);
+                }
+            }
         }
-        models[i].length = tmpNum.size();
+
+        models[i].length = NtmpNum;
+        NtmpNum = 0;
         models[i].buffer = (int *) malloc(models[i].length*sizeof(int));
         for(j=0; j<models[i].length; j++)
-            models[i].buffer[j] = tmpNum.at(j);
+            models[i].buffer[j] = tmpNum[j];
+
+        printf("Numbers: ");
+        for(j=0; j<models[i].length; j++)
+            printf("%d  ", models[i].buffer[j]);
+        printf("\n");
 
         models[i].ID = i;
         //models[i].bounding.resize(0);
 
-        fclose(pFile);        
+        fclose(pFile);    
+        printf("close\n");    
         free(filePath);
-
-        ///////////////////////////////////////
-        /*printf("Begin test\n");
-        Rect tmpBounding;
-        tmpBounding = Rect(1,2,3,4);
-        models[0].Nbounding = 1;
-        models[0].bounding = (Rect *) malloc(models[0].Nbounding*sizeof(Rect));
-        *(models[0].bounding) = tmpBounding;
-        printf("End test\n");*/
-        ///////////////////////////////////////
+        printf("free\n");
     }
 
+    printf("finish\n");
     return objectdetection_exec;
 }
 
@@ -314,6 +358,7 @@ ExecStart(const objectdetection_Camera *Camera,
         }
         cv::imshow("output", frame);
     }
+        
 
     if(cv::waitKey(30) == -1)
     {
