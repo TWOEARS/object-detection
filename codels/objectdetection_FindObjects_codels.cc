@@ -47,17 +47,19 @@ Rect commonArea(std::vector<Rect> bounding);
 genom_event
 InitStart(const char *objectPath, genom_context self)
 {
-    int i, j, count;;
-    char *filePath=NULL;
+    int i, j, count;
     char *inputPath=NULL;
     char *tmpName=NULL;
+    char *filePath=NULL;
     char tmp[150];
     size_t len;
     DIR *dir;
-    FILE *pFile;
     struct dirent *ent;
-    //std::vector<int> tmpNum;
+    FILE *pFile;
     int *tmpNum, *auxNum, NtmpNum=0;
+
+    uint32_t NobjectNames=0;
+    char **objectNames, **tmpobjectNames;
 
     //Check if path ends with /, if not add it.
     if(objectPath[strlen(objectPath)-1] == '/')
@@ -78,7 +80,6 @@ InitStart(const char *objectPath, genom_context self)
             //printf("%s\n", ent->d_name);
             if(strcmp(ent->d_name, ".") && strcmp(ent->d_name, ".."))
             {
-                //objectNames.push_back(ent->d_name);
                 if(NobjectNames == 0)
                 {
                     NobjectNames++;
@@ -102,25 +103,21 @@ InitStart(const char *objectPath, genom_context self)
                     free(objectNames);
                     NobjectNames++;
                     //Allocate names array with one more (new) element.
-                    objectNames = (char **) malloc(NobjectNames*sizeof(char*));
+                    objectNames = (char **) malloc((NobjectNames+1)*sizeof(char*));
                     //Copy elements from 'old' elements in tmp to the array.
                     for(i=0; i<NobjectNames-1; i++)
                     {
-                        printf("i: %d\n", i);
                         objectNames[i] = (char *) malloc((strlen(tmpobjectNames[i])+1)*sizeof(char));
-                        printf("After malloc\n");
-                        printf("tmpobjectNames[%d]: %s\n", i, tmpobjectNames[i]);
                         strcpy(objectNames[i], tmpobjectNames[i]);
-                        printf("objectNames[%d]: %s\n", i, objectNames[i]);
                     }
                     //Copy new element to array.
+                    objectNames[i] = (char *) malloc((strlen(ent->d_name)+1)*sizeof(char));
                     strcpy(objectNames[i], ent->d_name);
-                    printf("objectNames[%d]: %s\n", i,objectNames[i]);
                     for(i=0; i<NobjectNames-1; i++)
                         free(tmpobjectNames[i]);
                     free(tmpobjectNames);
                 }
-                printf("%s saved [%d]\n", ent->d_name, (int) strlen(ent->d_name));
+                printf("%s saved [%d]\n\n", ent->d_name, (int) strlen(ent->d_name));
             }
         }
         closedir(dir);
@@ -130,15 +127,9 @@ InitStart(const char *objectPath, genom_context self)
         printf("Directory [%s] could not be opened.\n", inputPath);
         return objectdetection_ether;
     }
-    printf("inputPath: %s\n", inputPath);
-    for(i=0; i<NobjectNames; i++)
-    {
-        printf("[%d] %s\n", i, objectNames[i]);
-    }
-    
+
     models = (objectsData *) malloc(NobjectNames*sizeof(struct objectsData));
     //Copy file name as "model's name"
-    printf("NobjectNames: %d\n", NobjectNames);
     numObj = NobjectNames;
     for (i=0; i<numObj; i++)
     {
@@ -149,25 +140,13 @@ InitStart(const char *objectPath, genom_context self)
         strcpy(models[i].name, tmpName);
     }
 
-    printf("Names: %d\n", numObj);
-    for (i=0; i<numObj; i++)
-    {
-        printf("Model %d: %s\n", i, models[i].name);
-    }
-    
     filePath = NULL;
-    printf("Files's list:\n");
     // Retrieve file names to struct.
     filePath = NULL;
-    printf("numObj: %d\n", numObj);
-    for (i=0; i<numObj-1; i++)
+    for (i=0; i<numObj; i++)
     {
-        printf("models[%d].name: %s\n", i,  models[i].name);
-        printf("FULL PATH: %s%s\n", inputPath, models[i].name);
-
         filePath = (char *) malloc((strlen(inputPath)+strlen(models[i].name)+4+1)*sizeof(char));    //+4 to add .txt and +1 for '\0'.
         sprintf(filePath, "%s%s.txt", inputPath, models[i].name);
-        printf("filePath: %s\n\n", filePath);
 
         pFile = fopen(filePath, "r");
         if(pFile==NULL)
@@ -183,25 +162,18 @@ InitStart(const char *objectPath, genom_context self)
             if(len>0 && tmp[len-1]=='\n')
             {
                 tmp[--len] = '\0';
-                printf("STRING tmp: %s\n", tmp);
-                printf("NtmpNum: %d\n", NtmpNum);
-                //tmpNum.push_back(atoi(tmp));
                 if(NtmpNum == 0)
                 {
                     NtmpNum++;
                     tmpNum = (int *) malloc(sizeof(int));
                     tmpNum[0] = atoi(tmp);
-                    printf("NtmpNUM=0: tmpNum[0]: %d\n", tmpNum[0]);
                 }
                 else
                 {
                     //Save current numers to a tmp array.
                     auxNum = (int *) malloc(NtmpNum*sizeof(int));
                     for(j=0; j<NtmpNum; j++)
-                    {
                         auxNum[j] = tmpNum[j];
-                        printf("tmpNum[%d]: %d - auxNum[%d]: %d\n", j, tmpNum[j], j, tmpNum[j]); 
-                    }
 
                     //Deallocate 'old' tmpNum array.
                     free(tmpNum);
@@ -209,19 +181,10 @@ InitStart(const char *objectPath, genom_context self)
                     //Allocate tmpNum array with one more (new) element.
                     tmpNum = (int *) malloc(NtmpNum*sizeof(int));
                     //Copy elements from 'old' array to the new one.
-                    printf("After malloc: ");
                     for(j=0; j<NtmpNum-1; j++)
-                    {
-                        printf("%d ", auxNum[j]);
                         tmpNum[j] = auxNum[j];
-                    }
-                    printf("\n");
                     //Copy new element to array.
                     tmpNum[j] = atoi(tmp);
-                    printf("After copy new element: ");
-                    for(j=0; j<NtmpNum; j++)
-                        printf("%d ", tmpNum[j]);
-                    printf("\n");
                     free(auxNum);
                 }
             }
@@ -233,21 +196,13 @@ InitStart(const char *objectPath, genom_context self)
         for(j=0; j<models[i].length; j++)
             models[i].buffer[j] = tmpNum[j];
 
-        printf("Numbers: ");
-        for(j=0; j<models[i].length; j++)
-            printf("%d  ", models[i].buffer[j]);
-        printf("\n");
-
         models[i].ID = i;
-        //models[i].bounding.resize(0);
 
-        fclose(pFile);    
-        printf("close\n");    
+        fclose(pFile);   
         free(filePath);
-        printf("free\n");
     }
+    
 
-    printf("finish\n");
     return objectdetection_exec;
 }
 
