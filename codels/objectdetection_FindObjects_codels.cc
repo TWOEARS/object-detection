@@ -15,7 +15,10 @@ using namespace std;
 /* --- Task FindObjects ------------------------------------------------- */
 
 std::vector<cv::Point2f> inPts, outPts;
-std::vector<char *> objectNames;
+//std::vector<char *> objectNames;
+
+uint32_t NobjectNames=0;
+char **objectNames, **tmpobjectNames;
 
 struct objectsData
 {
@@ -23,7 +26,9 @@ struct objectsData
     int ID;
     uint32_t length;
     int* buffer;
-    std::vector<Rect> bounding;
+    //std::vector<Rect> bounding;
+    uint32_t Nbounding;
+    Rect *bounding;
 };
 objectsData* models;
 int numObj;
@@ -72,8 +77,49 @@ InitStart(const char *objectPath, genom_context self)
             //printf("%s\n", ent->d_name);
             if(strcmp(ent->d_name, ".") && strcmp(ent->d_name, ".."))
             {
-                objectNames.push_back(ent->d_name);
-                //printf("%s saved [%d]\n", ent->d_name, strlen(ent->d_name));
+                //objectNames.push_back(ent->d_name);
+                if(NobjectNames == 0)
+                {
+                    NobjectNames++;
+                    objectNames = (char **) malloc(NobjectNames*sizeof(char*));
+                    objectNames[0] = (char *) malloc((strlen(ent->d_name)+1)*sizeof(char));
+                    strcpy(objectNames[0], ent->d_name);
+                }
+                else
+                {
+                    //Save current names to a tmp array.
+                    tmpobjectNames = (char **) malloc(NobjectNames*sizeof(char*));
+                    for(i=0; i<NobjectNames; i++)
+                    {
+                        tmpobjectNames[i] = (char *) malloc((strlen(objectNames[i])+1)*sizeof(char));
+                        strcpy(tmpobjectNames[i], objectNames[i]);
+                    }
+
+                    //Deallocate 'old' names array.
+                    for(i=0; i<NobjectNames; i++)
+                        free(objectNames[i]);
+                    free(objectNames);
+                    NobjectNames++;
+                    //Allocate names array with one more (new) element.
+                    objectNames = (char **) malloc(NobjectNames*sizeof(char*));
+                    //Copy elements from 'old' elements in tmp to the array.
+                    for(i=0; i<NobjectNames-1; i++)
+                    {
+                        printf("i: %d\n", i);
+                        objectNames[i] = (char *) malloc((strlen(tmpobjectNames[i])+1)*sizeof(char));
+                        printf("After malloc\n");
+                        printf("tmpobjectNames[%d]: %s\n", i, tmpobjectNames[i]);
+                        strcpy(objectNames[i], tmpobjectNames[i]);
+                        printf("objectNames[%d]: %s\n", i, objectNames[i]);
+                    }
+                    //Copy new element to array.
+                    strcpy(objectNames[i], ent->d_name);
+                    printf("objectNames[%d]: %s\n", i,objectNames[i]);
+                    for(i=0; i<NobjectNames-1; i++)
+                        free(tmpobjectNames[i]);
+                    free(tmpobjectNames);
+                }
+                printf("%s saved [%d]\n", ent->d_name, (int) strlen(ent->d_name));
             }
         }
         closedir(dir);
@@ -84,14 +130,18 @@ InitStart(const char *objectPath, genom_context self)
         return objectdetection_ether;
     }
     printf("inputPath: %s\n", inputPath);
+    for(i=0; i<NobjectNames; i++)
+    {
+        printf("[%d] %s\n", i, objectNames[i]);
+    }
     
-    models = (objectsData *) malloc(objectNames.size()*sizeof(struct objectsData));
+    models = (objectsData *) malloc(NobjectNames*sizeof(struct objectsData));
     //Copy file name as "model's name"
-    numObj = objectNames.size();
+    numObj = NobjectNames;
     for (i=0; i<numObj; i++)
     {
-        tmpName = (char *) malloc((strlen(objectNames.at(i))+1)*sizeof(char));
-        strcpy(tmpName, objectNames.at(i));
+        tmpName = (char *) malloc((strlen(objectNames[i])+1)*sizeof(char));
+        strcpy(tmpName, objectNames[i]);
         tmpName[strlen(tmpName)-4] = '\0';  //removes .txt
         models[i].name = (char *) malloc((strlen(tmpName)+1)*sizeof(char));
         strcpy(models[i].name, tmpName);
@@ -138,11 +188,20 @@ InitStart(const char *objectPath, genom_context self)
             models[i].buffer[j] = tmpNum.at(j);
 
         models[i].ID = i;
-        models[j].bounding.resize(0);
+        //models[i].bounding.resize(0);
 
         fclose(pFile);        
         free(filePath);
 
+        ///////////////////////////////////////
+        /*printf("Begin test\n");
+        Rect tmpBounding;
+        tmpBounding = Rect(1,2,3,4);
+        models[0].Nbounding = 1;
+        models[0].bounding = (Rect *) malloc(models[0].Nbounding*sizeof(Rect));
+        *(models[0].bounding) = tmpBounding;
+        printf("End test\n");*/
+        ///////////////////////////////////////
     }
 
     return objectdetection_exec;
@@ -228,7 +287,7 @@ ExecStart(const objectdetection_Camera *Camera,
                         if((int) inObjects->data(self)->data._buffer[12*i] == models[j].buffer[k])
                         {
                             printf("MATCH %d belongs to %s\n", (int) inObjects->data(self)->data._buffer[12*i], models[j].name);
-                            //models[j].bounding.push_back(Rect(outPts.at(0).x,outPts.at(0).y,outPts.at(3).x-outPts.at(0).x,outPts.at(3).y-outPts.at(0).y));
+                            //models[j].bounding.push_back(Rect(outPts.at(0).x, outPts.at(0).y, objectWidth, objectHeight));
                             break;
                         }
                     }
@@ -271,7 +330,8 @@ ExecStart(const objectdetection_Camera *Camera,
         }
 
         free(models);
-        objectNames.resize(0);
+        NobjectNames=0;
+        free(objectNames);
         return objectdetection_ether;
     }
 }
