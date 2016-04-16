@@ -235,6 +235,9 @@ ExecStart(const objectdetection_Camera *Camera,
         {
             printf("Data size: %d\n", inObjects->data(self)->data._length);
 
+            for(i=0; i<numObj; i++)
+                models[i].Nbounding = 0;
+
             for(i=0; i<(inObjects->data(self)->data._length/12); i++)
             {
                 objectWidth = inObjects->data(self)->data._buffer[12*i+1];
@@ -262,7 +265,7 @@ ExecStart(const objectdetection_Camera *Camera,
 						    outPts.at(1).x, outPts.at(1).y,
 						    outPts.at(2).x, outPts.at(2).y,
 						    outPts.at(3).x, outPts.at(3).y,
-                            objectWidth, objectHeight);
+                            outPts.at(3).x-outPts.at(0).x, outPts.at(3).y-outPts.at(0).y);
 
                 // Find to which model the ID from find_object_2d (/object topic) belongs to.
                 for(j=0; j<numObj; j++)
@@ -272,39 +275,46 @@ ExecStart(const objectdetection_Camera *Camera,
                     for(k=0; k<models[j].length; k++)
                         printf("%d ", models[j].buffer[k]);
                     printf("\n");*/
-                    models[j].Nbounding = 0;    //TODO: Check if this should be here.
+
                     for(k=0; k<models[j].length; k++)
                     {
                         //printf("Comparing %d and %d\n", (int) inObjects->data(self)->data._buffer[12*i], models[j].buffer[k]);
                         if((int) inObjects->data(self)->data._buffer[12*i] == models[j].buffer[k])
                         {
                             printf("MATCH %d belongs to %s\n", (int) inObjects->data(self)->data._buffer[12*i], models[j].name);
-                            //models[j].bounding.push_back(Rect(outPts.at(0).x, outPts.at(0).y, outPts.at(3).x-outPts.at(0).x, outPts.at(3).y-outPts.at(0).y));
+                            printf("To push: %f, %f, %f, %f)\n", outPts.at(0).x, outPts.at(0).y, outPts.at(3).x-outPts.at(0).x, outPts.at(3).y-outPts.at(0).y);
                             printf("models[%d].Nbounding: %d\n", j, models[j].Nbounding);
                             if(models[j].Nbounding == 0)
                             {
                                 models[j].Nbounding++;
                                 models[j].bounding = (Rect *) malloc(sizeof(Rect));
-                                models[j].bounding[0] = Rect(outPts.at(0).x, outPts.at(0).y, outPts.at(3).y-outPts.at(0).y);
-                                //printf("(%d, %d) - objectWidth: %d - objectHeight: %d\n", models[j].bounding[0].x, models[j].bounding[0].y, models[j].bounding[0].width, models[j].bounding[0].height);
+                                models[j].bounding[0] = Rect(outPts.at(0).x, outPts.at(0).y, outPts.at(3).x-outPts.at(0).x, outPts.at(3).y-outPts.at(0).y);
+                                printf("models[%d].bounding[0]: (%d, %d) - objectWidth: %d - objectHeight: %d\n", j, models[j].bounding[0].x, models[j].bounding[0].y, models[j].bounding[0].width, models[j].bounding[0].height);
                             }
                             else
                             {
+                                printf("Save current rects to a tmp array:\n");
                                 //Save current rects to a tmp array.
                                 tmpBounding = (Rect *) malloc(models[j].Nbounding*sizeof(Rect));
-                                for(l=0; l<models[l].Nbounding; l++)
+                                for(l=0; l<models[j].Nbounding; l++)
+                                {
                                     tmpBounding[l] = models[j].bounding[l];
-
+                                    printf("tmpBounding[%d]: %d %d %d %d\n", l, tmpBounding[l].x, tmpBounding[l].y, tmpBounding[l].width, tmpBounding[l].height);
+                                }
                                 //Deallocate 'old' models[j].bounding array.
                                 free(models[j].bounding);
                                 models[j].Nbounding++;
                                 //Allocate models[j].bounding with one more (new) element/
                                 models[j].bounding = (Rect *) malloc(models[j].Nbounding*sizeof(Rect));
                                 //Copy elements from 'old' array to the new one.
-                                for(l=0; l<models[l].Nbounding; l++)
+                                for(l=0; l<models[j].Nbounding-1; l++)
+                                {
                                     models[j].bounding[l] = tmpBounding[l];
+                                    printf("models[%d].bounding[%d]: %d %d %d %d\n", j, l, models[j].bounding[l].x, models[j].bounding[l].y, models[j].bounding[l].width, models[j].bounding[l].height);
+                                }
                                 //Copy new element to array.
                                 models[j].bounding[l] = Rect(outPts.at(0).x, outPts.at(0).y, objectWidth, objectHeight);
+                                printf("models[%d].bounding[%d]: %d %d %d %d\n", j, l, models[j].bounding[l].x, models[j].bounding[l].y, models[j].bounding[l].width, models[j].bounding[l].height);
                             }
                             break;
                         }
