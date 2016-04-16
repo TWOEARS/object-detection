@@ -9,7 +9,8 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp> 
 
-
+#define TRUE    1
+#define FALSE   0
 using namespace cv;
 using namespace std;
 /* --- Task FindObjects ------------------------------------------------- */
@@ -28,6 +29,8 @@ struct objectsData
     int* buffer;
     uint32_t Nbounding;
     Rect *bounding;
+    bool found;
+    Rect position;
 };
 objectsData* models;
 int numObj;
@@ -196,6 +199,7 @@ InitStart(const char *objectPath, genom_context self)
 
         models[i].ID = i;
         models[i].Nbounding = 0;
+        models[i].found = FALSE;
 
         fclose(pFile);   
         free(filePath);
@@ -281,25 +285,25 @@ ExecStart(const objectdetection_Camera *Camera,
                         //printf("Comparing %d and %d\n", (int) inObjects->data(self)->data._buffer[12*i], models[j].buffer[k]);
                         if((int) inObjects->data(self)->data._buffer[12*i] == models[j].buffer[k])
                         {
-                            printf("MATCH %d belongs to %s\n", (int) inObjects->data(self)->data._buffer[12*i], models[j].name);
+                            /*printf("MATCH %d belongs to %s\n", (int) inObjects->data(self)->data._buffer[12*i], models[j].name);
                             printf("To push: %f, %f, %f, %f)\n", outPts.at(0).x, outPts.at(0).y, outPts.at(3).x-outPts.at(0).x, outPts.at(3).y-outPts.at(0).y);
-                            printf("models[%d].Nbounding: %d\n", j, models[j].Nbounding);
+                            printf("models[%d].Nbounding: %d\n", j, models[j].Nbounding);*/
                             if(models[j].Nbounding == 0)
                             {
                                 models[j].Nbounding++;
                                 models[j].bounding = (Rect *) malloc(sizeof(Rect));
                                 models[j].bounding[0] = Rect(outPts.at(0).x, outPts.at(0).y, outPts.at(3).x-outPts.at(0).x, outPts.at(3).y-outPts.at(0).y);
-                                printf("models[%d].bounding[0]: (%d, %d) - objectWidth: %d - objectHeight: %d\n", j, models[j].bounding[0].x, models[j].bounding[0].y, models[j].bounding[0].width, models[j].bounding[0].height);
+                                //printf("models[%d].bounding[0]: (%d, %d) - objectWidth: %d - objectHeight: %d\n", j, models[j].bounding[0].x, models[j].bounding[0].y, models[j].bounding[0].width, models[j].bounding[0].height);
                             }
                             else
                             {
-                                printf("Save current rects to a tmp array:\n");
+                                //printf("Save current rects to a tmp array:\n");
                                 //Save current rects to a tmp array.
                                 tmpBounding = (Rect *) malloc(models[j].Nbounding*sizeof(Rect));
                                 for(l=0; l<models[j].Nbounding; l++)
                                 {
                                     tmpBounding[l] = models[j].bounding[l];
-                                    printf("tmpBounding[%d]: %d %d %d %d\n", l, tmpBounding[l].x, tmpBounding[l].y, tmpBounding[l].width, tmpBounding[l].height);
+                                    //printf("tmpBounding[%d]: %d %d %d %d\n", l, tmpBounding[l].x, tmpBounding[l].y, tmpBounding[l].width, tmpBounding[l].height);
                                 }
                                 //Deallocate 'old' models[j].bounding array.
                                 free(models[j].bounding);
@@ -310,7 +314,7 @@ ExecStart(const objectdetection_Camera *Camera,
                                 for(l=0; l<models[j].Nbounding-1; l++)
                                 {
                                     models[j].bounding[l] = tmpBounding[l];
-                                    printf("models[%d].bounding[%d]: %d %d %d %d\n", j, l, models[j].bounding[l].x, models[j].bounding[l].y, models[j].bounding[l].width, models[j].bounding[l].height);
+                                    //printf("models[%d].bounding[%d]: %d %d %d %d\n", j, l, models[j].bounding[l].x, models[j].bounding[l].y, models[j].bounding[l].width, models[j].bounding[l].height);
                                 }
                                 //Copy new element to array.
                                 models[j].bounding[l] = Rect(outPts.at(0).x, outPts.at(0).y, objectWidth, objectHeight);
@@ -320,7 +324,7 @@ ExecStart(const objectdetection_Camera *Camera,
                         }
                     }
                 }                
-                bounding.push_back(Rect(outPts.at(0).x, outPts.at(0).y, objectWidth, objectHeight));
+                //bounding.push_back(Rect(outPts.at(0).x, outPts.at(0).y, objectWidth, objectHeight));
                 //cv::rectangle(frame, bounding.at(i), cv::Scalar(0, 0, 255));
             }
 
@@ -332,13 +336,31 @@ ExecStart(const objectdetection_Camera *Camera,
                 {
                     printf("(%d, %d) - objectWidth: %d - objectHeight: %d\n", models[i].bounding[j].x, models[i].bounding[j].y, models[i].bounding[j].width, models[i].bounding[j].height);
                 }
+
+                if(models[i].Nbounding == 0)
+                    models[i].found = FALSE;
+                else
+                {
+                    models[i].found = TRUE;
+                    for(j=0; j<models[i].Nbounding; j++)
+                    {
+                        bounding.push_back(models[i].bounding[j]);
+                        printf("PUSHED: %d %d %d %d\n", models[i].bounding[j].x, models[i].bounding[j].y, models[i].bounding[j].width, models[i].bounding[j].height);
+                    }
+                }
+                printf("%d rectangles pushed for %s\n", (int) bounding.size(), models[i].name);
+                object = commonArea(bounding);
+                bounding.resize(0);
+                if(object.area()>0)
+                    cv::rectangle(frame, object, cv::Scalar(0, 0, 255));
+                printf("%s superposed position [x, y, w, h]: %d %d %d %d\n", models[i].name, object.x, object.y, object.width, object.height);
             }
 
             //Find where the rectangles overlap and consider that the position of the object.
-            printf("Total of bounding boxes: %d\n", (int) bounding.size());
+            /*printf("Total of bounding boxes: %d\n", (int) bounding.size());
             object = commonArea(bounding);
             if(object.area()>0)
-                cv::rectangle(frame, object, cv::Scalar(0, 255, 0));
+                cv::rectangle(frame, object, cv::Scalar(0, 255, 0));*/
 
             /*//Find where the rectangles overlap and consider that the position of the object.
             for(i=0; i<numObj; i++)
