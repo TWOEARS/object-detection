@@ -199,7 +199,6 @@ InitStart(const char *objectPath, genom_context self)
 
         models[i].ID = i;
         models[i].Nbounding = 0;
-        models[i].found = FALSE;
 
         fclose(pFile);   
         free(filePath);
@@ -237,7 +236,7 @@ ExecStart(const objectdetection_Camera *Camera,
         inObjects->read(self);
         if(inObjects->data(self) != NULL)
         {
-            printf("Data size: %d\n", inObjects->data(self)->data._length);
+            //printf("Data size: %d\n", inObjects->data(self)->data._length);
 
             for(i=0; i<numObj; i++)
                 models[i].Nbounding = 0;
@@ -263,13 +262,13 @@ ExecStart(const objectdetection_Camera *Camera,
 		        inPts.push_back(cv::Point2f(objectWidth,objectHeight));
 		        cv::perspectiveTransform(inPts, outPts, cvHomography);
 
-                printf("Object %d detected, CV corners at (%f,%f) (%f,%f) (%f,%f) (%f,%f) - objectWidth: %f - objectHeight: %f\n",
+                /*printf("Object %d detected, CV corners at (%f,%f) (%f,%f) (%f,%f) (%f,%f) - objectWidth: %f - objectHeight: %f\n",
 						    (int) inObjects->data(self)->data._buffer[12*i],
 						    outPts.at(0).x, outPts.at(0).y,
 						    outPts.at(1).x, outPts.at(1).y,
 						    outPts.at(2).x, outPts.at(2).y,
 						    outPts.at(3).x, outPts.at(3).y,
-                            outPts.at(3).x-outPts.at(0).x, outPts.at(3).y-outPts.at(0).y);
+                            outPts.at(3).x-outPts.at(0).x, outPts.at(3).y-outPts.at(0).y);*/
 
                 // Find to which model the ID from find_object_2d (/object topic) belongs to.
                 for(j=0; j<numObj; j++)
@@ -318,7 +317,7 @@ ExecStart(const objectdetection_Camera *Camera,
                                 }
                                 //Copy new element to array.
                                 models[j].bounding[l] = Rect(outPts.at(0).x, outPts.at(0).y, objectWidth, objectHeight);
-                                printf("models[%d].bounding[%d]: %d %d %d %d\n", j, l, models[j].bounding[l].x, models[j].bounding[l].y, models[j].bounding[l].width, models[j].bounding[l].height);
+                                //printf("models[%d].bounding[%d]: %d %d %d %d\n", j, l, models[j].bounding[l].x, models[j].bounding[l].y, models[j].bounding[l].width, models[j].bounding[l].height);
                             }
                             break;
                         }
@@ -328,13 +327,13 @@ ExecStart(const objectdetection_Camera *Camera,
                 //cv::rectangle(frame, bounding.at(i), cv::Scalar(0, 0, 255));
             }
 
-            printf("Rectangles found for each object:\n");
+            //printf("Rectangles found for each object:\n");
             for(i=0; i<numObj; i++)
             {
-                printf("%d for %s:\n", models[i].Nbounding, models[i].name);
+                //printf("%d for %s:\n", models[i].Nbounding, models[i].name);
                 for(j=0; j<models[i].Nbounding; j++)
                 {
-                    printf("(%d, %d) - objectWidth: %d - objectHeight: %d\n", models[i].bounding[j].x, models[i].bounding[j].y, models[i].bounding[j].width, models[i].bounding[j].height);
+                    //printf("(%d, %d) - objectWidth: %d - objectHeight: %d\n", models[i].bounding[j].x, models[i].bounding[j].y, models[i].bounding[j].width, models[i].bounding[j].height);
                 }
 
                 if(models[i].Nbounding == 0)
@@ -345,30 +344,19 @@ ExecStart(const objectdetection_Camera *Camera,
                     for(j=0; j<models[i].Nbounding; j++)
                     {
                         bounding.push_back(models[i].bounding[j]);
-                        printf("PUSHED: %d %d %d %d\n", models[i].bounding[j].x, models[i].bounding[j].y, models[i].bounding[j].width, models[i].bounding[j].height);
+                        //printf("PUSHED: %d %d %d %d\n", models[i].bounding[j].x, models[i].bounding[j].y, models[i].bounding[j].width, models[i].bounding[j].height);
                     }
                 }
-                printf("%d rectangles pushed for %s\n", (int) bounding.size(), models[i].name);
+                //printf("%d rectangles pushed for %s\n", (int) bounding.size(), models[i].name);
                 object = commonArea(bounding);
                 bounding.resize(0);
                 if(object.area()>0)
+                    {
                     cv::rectangle(frame, object, cv::Scalar(0, 0, 255));
-                printf("%s superposed position [x, y, w, h]: %d %d %d %d\n", models[i].name, object.x, object.y, object.width, object.height);
+                    cv::putText(frame, models[i].name, cv::Point(object.x,object.y-10), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(0,255,0));
+                    }
+                //printf("%s superposed position [x, y, w, h]: %d %d %d %d\n", models[i].name, object.x, object.y, object.width, object.height);
             }
-
-            //Find where the rectangles overlap and consider that the position of the object.
-            /*printf("Total of bounding boxes: %d\n", (int) bounding.size());
-            object = commonArea(bounding);
-            if(object.area()>0)
-                cv::rectangle(frame, object, cv::Scalar(0, 255, 0));*/
-
-            /*//Find where the rectangles overlap and consider that the position of the object.
-            for(i=0; i<numObj; i++)
-            {
-                object = commonArea(models[i].bounding);
-                if(object.area()>0)
-                    cv::rectangle(frame, object, cv::Scalar(255, 255, 0));
-            }*/
 
             printf("\n");
         }
