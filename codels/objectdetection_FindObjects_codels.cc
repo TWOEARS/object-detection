@@ -9,6 +9,8 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp> 
 
+#include "misc.h"
+
 #define TRUE    1
 #define FALSE   0
 using namespace cv;
@@ -36,10 +38,6 @@ objectsData* models;
 int numObj;
 
 /* --- Activity Start --------------------------------------------------- */
-
-/* Function's Headers*/
-Rect commonArea(std::vector<Rect> bounding);
-/* Function's Headers*/
 
 /** Codel InitStart of activity Start.
  *
@@ -76,15 +74,15 @@ InitStart(const char *objectPath, genom_context self)
         sprintf(inputPath, "%s/", objectPath);
     }
 
+    //Removes temporarly files (*~) that might be in the objects's folder.
     tmpTxt = (char *) malloc(512*sizeof(char));    //500 MAX number of characters for path.
     sprintf(tmpTxt, "rm %s*~", inputPath);
-    printf("REMOVE: %s\n", tmpTxt);
+    printf("Trying to remove temporarly files: %s\n", tmpTxt);
     system(tmpTxt);
     free(tmpTxt);
 
     if((dir = opendir(inputPath)) != NULL)
     {
-        //TODO: Check if there are temporarly files (.*~) and remove them.
         while((ent=readdir(dir)) != NULL)
         {
             //printf("%s\n", ent->d_name);
@@ -389,36 +387,4 @@ ExecStart(const objectdetection_Camera *Camera,
         free(objectNames);
         return objectdetection_ether;
     }
-}
-
-
-/* Functions */
-Rect commonArea(std::vector<Rect> bounding)
-{
-    int i;
-    Rect object, R1, R2;
-
-    if(bounding.size()>0)
-    {
-        if(bounding.size() == 1)
-            object = bounding.at(0);
-        if(bounding.size() == 2)
-        {
-            object = bounding.at(0) & bounding.at(1);
-            if(!(object.area()>0))
-                object = Rect(0,0,0,0);
-            
-        }
-        if(bounding.size()>2)
-        {
-            object = bounding.at(0) & bounding.at(1);
-            for(i=2; i<bounding.size(); i++)
-            {
-                R1 = object;
-                R2 = bounding.at(i);
-                object = R1 & R2;
-            }
-        }
-    }
-    return object;
 }
