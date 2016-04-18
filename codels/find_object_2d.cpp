@@ -29,6 +29,7 @@
  */
 
 #include "find_object_2d.h"
+#include <stdio.h>
 
 void find_object(cv::Mat frame, sequence_float Data, objectsData *models, int numObj, genom_context self)
 {
@@ -39,6 +40,7 @@ void find_object(cv::Mat frame, sequence_float Data, objectsData *models, int nu
     Rect object, R1, R2;
     Rect *tmpBounding;
     std::vector<cv::Point2f> inPts, outPts;
+    char *tmpTxt;
 
     for(i=0; i<numObj; i++)
         models[i].Nbounding = 0;
@@ -109,7 +111,6 @@ void find_object(cv::Mat frame, sequence_float Data, objectsData *models, int nu
             models[i].found = FALSE;
         else
         {
-            models[i].found = TRUE;
             for(j=0; j<models[i].Nbounding; j++)
             {
                 bounding.push_back(models[i].bounding[j]);
@@ -119,8 +120,15 @@ void find_object(cv::Mat frame, sequence_float Data, objectsData *models, int nu
         bounding.resize(0);
         if(object.area()>0)
         {
+            models[i].found = TRUE;
+            models[i].position = object;
             cv::rectangle(frame, object, cv::Scalar(0, 0, 255));
-            cv::putText(frame, models[i].name, cv::Point(object.x,object.y-10), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(0,255,0));
+            tmpTxt = (char *) malloc(256*sizeof(char));
+            sprintf(tmpTxt, "(%d, %d) %s", models[i].position.x + (int)(models[i].position.width/2), models[i].position.y + (int)(models[i].position.height/2), models[i].name);
+            cv::putText(frame, tmpTxt, cv::Point(object.x,object.y-10), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(0,255,0));
+            free(tmpTxt);
         }
+        else
+            models[i].found = FALSE;
     }
 }
