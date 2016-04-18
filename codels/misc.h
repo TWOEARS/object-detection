@@ -54,5 +54,6 @@ struct objectsData
 };
 
 Rect commonArea(std::vector<Rect> bounding);
+void triangulation(double f, double T, int leftX, int leftY, int rightX);
 
 #endif

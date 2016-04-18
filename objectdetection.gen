@@ -60,6 +60,7 @@
 
 #include "objectdetectionStruct.idl"
 #include "find_object_2d.idl"
+#include "cameraCalibrationStruct.idl"
 
 component objectdetection{
 	version		"1.0";
@@ -71,6 +72,7 @@ component objectdetection{
     port in find_object_2d::std_msgs__Float32MultiArray inObjectsL;
     port in detectionO::sensor_msgs__Image CameraR;
     port in find_object_2d::std_msgs__Float32MultiArray inObjectsR;
+    port in calibrationParameters::sensor_msgs__CameraInfo RightCameraParameters;
 
 
     task FindObjects{
@@ -81,7 +83,7 @@ component objectdetection{
 
     activity Start(in string objectPath = "/tmp/objects/")
     {
-        codel<start> InitStart(local in objectPath) yield exec, ether;
+        codel<start> InitStart(local in objectPath, port in RightCameraParameters) yield exec, ether;
         codel<exec> ExecStart(port in CameraL, port in inObjectsL,
                               port in CameraR, port in inObjectsR) yield exec, ether;
 
@@ -93,6 +95,7 @@ component objectdetection{
 /* 
 To compile: genom3 skeleton -l c++ -i objectdetection.gen
 
+::objectdetection::connect_port RightCameraParameters /stereo/right/camera_info
 ::objectdetection::connect_port CameraL /stereo/left/image_rect_color
 ::objectdetection::connect_port inObjectsL find_objects_2d_Left/objects
 ::objectdetection::connect_port CameraR /stereo/right/image_rect_color

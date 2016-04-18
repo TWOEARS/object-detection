@@ -25,6 +25,7 @@ char **objectNames, **tmpobjectNames;
 objectsData* modelsL, *modelsR;
 int numObj;
 
+double Fx, T; //Fx: Focal length - T: Base line.
 /* --- Activity Start --------------------------------------------------- */
 
 /** Codel InitStart of activity Start.
@@ -33,7 +34,9 @@ int numObj;
  * Yields to objectdetection_exec, objectdetection_ether.
  */
 genom_event
-InitStart(const char *objectPath, genom_context self)
+InitStart(const char *objectPath,
+          const objectdetection_RightCameraParameters *RightCameraParameters,
+          genom_context self)
 {
     int i, j, count;
     char *inputPath=NULL;
@@ -213,29 +216,18 @@ InitStart(const char *objectPath, genom_context self)
             modelsR[i].buffer[j] = modelsL[i].buffer[j];    
     }
     
-    /////////////////////////////////
-    printf("Model Left:\n");
-    for(i=0; i<numObj; i++)
+    //Read right camera's parameters (Fx and T) to be used for triangulation.
+    RightCameraParameters->read(self);
+    if(RightCameraParameters->data(self) != NULL)
     {
-        printf("\tName: %s\n", modelsL[i].name);
-        printf("\t\tID: %d\n", modelsL[i].ID);
-        printf("\t\tbuffer[%d]: ", modelsL[i].length);
-        for(j=0; j<modelsL[i].length; j++)
-            printf("%d ", modelsL[i].buffer[j]);
-        printf("\n");
+        Fx = RightCameraParameters->data(self)->P[0];
+        T = (-1) * (RightCameraParameters->data(self)->P[3]/RightCameraParameters->data(self)->P[0]);
     }
-    printf("Model Right:\n");
-    for(i=0; i<numObj; i++)
+    else
     {
-        printf("\tName: %s\n", modelsR[i].name);
-        printf("\t\tID: %d\n", modelsR[i].ID);
-        printf("\t\tbuffer[%d]: ", modelsR[i].length);
-        for(j=0; j<modelsR[i].length; j++)
-            printf("%d ", modelsR[i].buffer[j]);
-        printf("\n");
-    }
-    printf("\n");
-    /////////////////////////////////
+        printf("--(!)Error reading intrinsic parameters\n");
+        return objectdetection_ether;
+    };
 
     return objectdetection_exec;
 }
@@ -300,7 +292,7 @@ ExecStart(const objectdetection_CameraL *CameraL,
             printf("%s found in both images.\n", modelsL[i].name);
             printf("\tLeft: %d %d\n", modelsL[i].position.x + (int)(modelsL[i].position.width/2), modelsL[i].position.y + (int)(modelsL[i].position.height/2));
             printf("\tRight: %d %d\n\n", modelsR[i].position.x + (int)(modelsR[i].position.width/2), modelsR[i].position.y + (int)(modelsR[i].position.height/2));
-            
+            triangulation(Fx, T, modelsL[i].position.x + (int)(modelsL[i].position.width/2), modelsL[i].position.y + (int)(modelsL[i].position.height/2), modelsR[i].position.x + (int)(modelsR[i].position.width/2));
         }   
     }
         
