@@ -7,6 +7,9 @@ libobjectdetection_codels_la_SOURCES+=	objectdetection_FindObjects_codels.cc
 libobjectdetection_codels_la_SOURCES+= misc.h
 libobjectdetection_codels_la_SOURCES+= misc.cpp
 
+libobjectdetection_codels_la_SOURCES+= find_object_2d.h
+libobjectdetection_codels_la_SOURCES+= find_object_2d.cpp
+
 libobjectdetection_codels_la_CPPFLAGS=	$(requires_CFLAGS)
 libobjectdetection_codels_la_LDFLAGS=	$(requires_LIBS)
 libobjectdetection_codels_la_LDFLAGS+=	-release $(PACKAGE_VERSION)

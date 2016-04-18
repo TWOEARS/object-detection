@@ -10,6 +10,7 @@
 #include <opencv2/imgproc/imgproc.hpp> 
 
 #include "misc.h"
+#include "find_object_2d.h"
 
 #define TRUE    1
 #define FALSE   0
@@ -17,23 +18,11 @@ using namespace cv;
 using namespace std;
 /* --- Task FindObjects ------------------------------------------------- */
 
-std::vector<cv::Point2f> inPts, outPts;
-
 //std::vector<char *> objectNames;
 uint32_t NobjectNames=0;
 char **objectNames, **tmpobjectNames;
 
-struct objectsData
-{
-    char* name;
-    int ID;
-    uint32_t length;
-    int* buffer;
-    uint32_t Nbounding;
-    Rect *bounding;
-    bool found;
-    Rect position;
-};
+
 objectsData* models;
 int numObj;
 
@@ -242,89 +231,7 @@ ExecStart(const objectdetection_Camera *Camera,
         inObjects->read(self);
         if(inObjects->data(self) != NULL)
         {
-            for(i=0; i<numObj; i++)
-                models[i].Nbounding = 0;
-
-            for(i=0; i<(inObjects->data(self)->data._length/12); i++)
-            {
-                objectWidth = inObjects->data(self)->data._buffer[12*i+1];
-                objectHeight = inObjects->data(self)->data._buffer[12*i+2];
-
-		        // Find corners OpenCV
-		        cvHomography.at<float>(0,0) = inObjects->data(self)->data._buffer[12*i+3];
-		        cvHomography.at<float>(1,0) = inObjects->data(self)->data._buffer[12*i+4];
-		        cvHomography.at<float>(2,0) = inObjects->data(self)->data._buffer[12*i+5];
-		        cvHomography.at<float>(0,1) = inObjects->data(self)->data._buffer[12*i+6];
-		        cvHomography.at<float>(1,1) = inObjects->data(self)->data._buffer[12*i+7];
-		        cvHomography.at<float>(2,1) = inObjects->data(self)->data._buffer[12*i+8];
-		        cvHomography.at<float>(0,2) = inObjects->data(self)->data._buffer[12*i+9];
-		        cvHomography.at<float>(1,2) = inObjects->data(self)->data._buffer[12*i+10];
-		        cvHomography.at<float>(2,2) = inObjects->data(self)->data._buffer[12*i+11];
-		        inPts.push_back(cv::Point2f(0,0));
-		        inPts.push_back(cv::Point2f(objectWidth,0));
-		        inPts.push_back(cv::Point2f(0,objectHeight));
-		        inPts.push_back(cv::Point2f(objectWidth,objectHeight));
-		        cv::perspectiveTransform(inPts, outPts, cvHomography);
-
-                // Find to which model the ID from find_object_2d (/object topic) belongs to.
-                for(j=0; j<numObj; j++)
-                {
-                    for(k=0; k<models[j].length; k++)
-                    {
-                        if((int) inObjects->data(self)->data._buffer[12*i] == models[j].buffer[k])
-                        {
-                            if(models[j].Nbounding == 0)
-                            {
-                                models[j].Nbounding++;
-                                models[j].bounding = (Rect *) malloc(sizeof(Rect));
-                                models[j].bounding[0] = Rect(outPts.at(0).x, outPts.at(0).y, outPts.at(3).x-outPts.at(0).x, outPts.at(3).y-outPts.at(0).y);
-                            }
-                            else
-                            {
-                                //Save current rects to a tmp array.
-                                tmpBounding = (Rect *) malloc(models[j].Nbounding*sizeof(Rect));
-                                for(l=0; l<models[j].Nbounding; l++)
-                                {
-                                    tmpBounding[l] = models[j].bounding[l];
-                                }
-                                //Deallocate 'old' models[j].bounding array.
-                                free(models[j].bounding);
-                                models[j].Nbounding++;
-                                //Allocate models[j].bounding with one more (new) element/
-                                models[j].bounding = (Rect *) malloc(models[j].Nbounding*sizeof(Rect));
-                                //Copy elements from 'old' array to the new one.
-                                for(l=0; l<models[j].Nbounding-1; l++)
-                                {
-                                    models[j].bounding[l] = tmpBounding[l];
-                                }
-                                //Copy new element to array.
-                                models[j].bounding[l] = Rect(outPts.at(0).x, outPts.at(0).y, objectWidth, objectHeight);
-                            }
-                            break;
-                        }
-                    }
-                }         
-            }
-            for(i=0; i<numObj; i++)
-            {
-                if(models[i].Nbounding == 0)
-                    models[i].found = FALSE;
-                else
-                {
-                    models[i].found = TRUE;
-                    for(j=0; j<models[i].Nbounding; j++)
-                    {
-                        bounding.push_back(models[i].bounding[j]);
-                    }
-                }
-                object = commonArea(bounding);
-                bounding.resize(0);
-                if(object.area()>0)
-                {
-                    cv::rectangle(frame, object, cv::Scalar(0, 0, 255));
-                    cv::putText(frame, models[i].name, cv::Point(object.x,object.y-10), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(0,255,0));
-                }
-            }
+            find_object(frame, inObjects, models, numObj, self);
         }
         cv::imshow("output", frame);
     }

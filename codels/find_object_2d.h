@@ -28,31 +28,19 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef	MISC_H
-#define	MISC_H
+#ifndef	FIND_OBJECT_2D_H
+#define	FIND_OBJECT_2D_H
 
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
-#include <opencv2/imgproc/imgproc.hpp> 
+#include <opencv2/imgproc/imgproc.hpp>
 
-#define TRUE    1
-#define FALSE   0
+#include "objectdetection_c_types.h"
+#include "misc.h"
 
 using namespace cv;
 using namespace std;
 
-struct objectsData
-{
-    char* name;
-    int ID;
-    uint32_t length;
-    int* buffer;
-    uint32_t Nbounding;
-    Rect *bounding;
-    bool found;
-    Rect position;
-};
-
-Rect commonArea(std::vector<Rect> bounding);
+void find_object(cv::Mat frame, const objectdetection_inObjects *inObjects, objectsData *models, int numObj, genom_context self);
 
 #endif
