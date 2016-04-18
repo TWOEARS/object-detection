@@ -35,6 +35,8 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp> 
 
+#include "objectdetection_c_types.h"
+
 #define TRUE    1
 #define FALSE   0
 
@@ -54,6 +56,6 @@ struct objectsData
 };
 
 Rect commonArea(std::vector<Rect> bounding);
-void triangulation(double f, double T, int leftX, int leftY, int rightX);
+triangulation_world_coordinates triangulation(double f, double T, int leftX, int leftY, int rightX);
 
 #endif

@@ -242,6 +242,8 @@ ExecStart(const objectdetection_CameraL *CameraL,
           const objectdetection_inObjectsL *inObjectsL,
           const objectdetection_CameraR *CameraR,
           const objectdetection_inObjectsR *inObjectsR,
+          uint16_t frameHistory,
+          const objectdetection_Detections *Detections,
           genom_context self)
 {
     int i, j, k, l;
@@ -251,6 +253,8 @@ ExecStart(const objectdetection_CameraL *CameraL,
     std::vector<Rect> bounding;
     Rect object, R1, R2;
     Rect *tmpBounding;
+    triangulation_world_coordinates triangulationResult;
+
     cv::namedWindow("output left", cv::WINDOW_NORMAL);
     cv::namedWindow("output right", cv::WINDOW_NORMAL);
 
@@ -292,7 +296,8 @@ ExecStart(const objectdetection_CameraL *CameraL,
             printf("%s found in both images.\n", modelsL[i].name);
             printf("\tLeft: %d %d\n", modelsL[i].position.x + (int)(modelsL[i].position.width/2), modelsL[i].position.y + (int)(modelsL[i].position.height/2));
             printf("\tRight: %d %d\n\n", modelsR[i].position.x + (int)(modelsR[i].position.width/2), modelsR[i].position.y + (int)(modelsR[i].position.height/2));
-            triangulation(Fx, T, modelsL[i].position.x + (int)(modelsL[i].position.width/2), modelsL[i].position.y + (int)(modelsL[i].position.height/2), modelsR[i].position.x + (int)(modelsR[i].position.width/2));
+            triangulationResult = triangulation(Fx, T, modelsL[i].position.x + (int)(modelsL[i].position.width/2), modelsL[i].position.y + (int)(modelsL[i].position.height/2), modelsR[i].position.x + (int)(modelsR[i].position.width/2));
+            printf("%f %f %f\n", triangulationResult.x, triangulationResult.y, triangulationResult.z);
         }   
     }
         

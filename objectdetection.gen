@@ -61,6 +61,7 @@
 #include "objectdetectionStruct.idl"
 #include "find_object_2d.idl"
 #include "cameraCalibrationStruct.idl"
+#include "triangulation.idl"
 
 component objectdetection{
 	version		"1.0";
@@ -73,6 +74,7 @@ component objectdetection{
     port in detectionO::sensor_msgs__Image CameraR;
     port in find_object_2d::std_msgs__Float32MultiArray inObjectsR;
     port in calibrationParameters::sensor_msgs__CameraInfo RightCameraParameters;
+    port out triangulation::Detections Detections;
 
 
     task FindObjects{
@@ -81,11 +83,13 @@ component objectdetection{
         stack       4000;
     };
 
-    activity Start(in string objectPath = "/tmp/objects/")
+    activity Start(in string objectPath = "/tmp/objects/",
+                   in unsigned short frameHistory = 5  : "Number of frames to publish on the port.")
     {
         codel<start> InitStart(local in objectPath, port in RightCameraParameters) yield exec, ether;
         codel<exec> ExecStart(port in CameraL, port in inObjectsL,
-                              port in CameraR, port in inObjectsR) yield exec, ether;
+                              port in CameraR, port in inObjectsR,
+                              local in frameHistory, port out Detections) yield exec, ether;
 
         task FindObjects;
     };

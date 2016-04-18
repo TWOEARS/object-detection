@@ -61,10 +61,11 @@ Rect commonArea(std::vector<Rect> bounding)
     return object;
 }
 
-void triangulation(double f, double T, int leftX, int leftY, int rightX)
+triangulation_world_coordinates triangulation(double f, double T, int leftX, int leftY, int rightX)
 {
     double x, y, z;
     int disparity;
+    triangulation_world_coordinates result;
 
     printf("Fx: %f\n", f);
     printf("T: %f\n", T);
@@ -74,9 +75,9 @@ void triangulation(double f, double T, int leftX, int leftY, int rightX)
 
     disparity = rightX - leftX;
     printf("disparity: %d\n", disparity);
-    z = (f*T) / disparity;
-    x = (leftX*z) / f;
-    y = (leftY*z) / f;
-    printf("%f %f %f\n", x, y, z);
+    result.z = (f*T) / disparity;
+    result.x = (leftX*z) / f;
+    result.y = (leftY*z) / f;
 
+    return result;
 }
