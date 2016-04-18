@@ -53,6 +53,7 @@ InitStart(const char *objectPath, genom_context self)
     char *inputPath=NULL;
     char *tmpName=NULL;
     char *filePath=NULL;
+    char *tmpTxt;
     char tmp[150];
     size_t len;
     DIR *dir;
@@ -75,8 +76,15 @@ InitStart(const char *objectPath, genom_context self)
         sprintf(inputPath, "%s/", objectPath);
     }
 
+    tmpTxt = (char *) malloc(512*sizeof(char));    //500 MAX number of characters for path.
+    sprintf(tmpTxt, "rm %s*~", inputPath);
+    printf("REMOVE: %s\n", tmpTxt);
+    system(tmpTxt);
+    free(tmpTxt);
+
     if((dir = opendir(inputPath)) != NULL)
     {
+        //TODO: Check if there are temporarly files (.*~) and remove them.
         while((ent=readdir(dir)) != NULL)
         {
             //printf("%s\n", ent->d_name);
@@ -357,8 +365,6 @@ ExecStart(const objectdetection_Camera *Camera,
                     }
                 //printf("%s superposed position [x, y, w, h]: %d %d %d %d\n", models[i].name, object.x, object.y, object.width, object.height);
             }
-
-            printf("\n");
         }
         cv::imshow("output", frame);
     }
