@@ -22,8 +22,7 @@ using namespace std;
 uint32_t NobjectNames=0;
 char **objectNames, **tmpobjectNames;
 
-
-objectsData* models;
+objectsData* modelsL, *modelsR;
 int numObj;
 
 /* --- Activity Start --------------------------------------------------- */
@@ -124,7 +123,7 @@ InitStart(const char *objectPath, genom_context self)
         return objectdetection_ether;
     }
 
-    models = (objectsData *) malloc(NobjectNames*sizeof(struct objectsData));
+    modelsL = (objectsData *) malloc(NobjectNames*sizeof(struct objectsData));
     //Copy file name as "model's name"
     numObj = NobjectNames;
     for (i=0; i<numObj; i++)
@@ -132,8 +131,8 @@ InitStart(const char *objectPath, genom_context self)
         tmpName = (char *) malloc((strlen(objectNames[i])+1)*sizeof(char));
         strcpy(tmpName, objectNames[i]);
         tmpName[strlen(tmpName)-4] = '\0';  //removes .txt
-        models[i].name = (char *) malloc((strlen(tmpName)+1)*sizeof(char));
-        strcpy(models[i].name, tmpName);
+        modelsL[i].name = (char *) malloc((strlen(tmpName)+1)*sizeof(char));
+        strcpy(modelsL[i].name, tmpName);
     }
 
     filePath = NULL;
@@ -141,8 +140,8 @@ InitStart(const char *objectPath, genom_context self)
     filePath = NULL;
     for (i=0; i<numObj; i++)
     {
-        filePath = (char *) malloc((strlen(inputPath)+strlen(models[i].name)+4+1)*sizeof(char));    //+4 to add .txt and +1 for '\0'.
-        sprintf(filePath, "%s%s.txt", inputPath, models[i].name);
+        filePath = (char *) malloc((strlen(inputPath)+strlen(modelsL[i].name)+4+1)*sizeof(char));    //+4 to add .txt and +1 for '\0'.
+        sprintf(filePath, "%s%s.txt", inputPath, modelsL[i].name);
 
         pFile = fopen(filePath, "r");
         if(pFile==NULL)
@@ -186,19 +185,56 @@ InitStart(const char *objectPath, genom_context self)
             }
         }
 
-        models[i].length = NtmpNum;
+        modelsL[i].length = NtmpNum;
         NtmpNum = 0;
-        models[i].buffer = (int *) malloc(models[i].length*sizeof(int));
-        for(j=0; j<models[i].length; j++)
-            models[i].buffer[j] = tmpNum[j];
+        modelsL[i].buffer = (int *) malloc(modelsL[i].length*sizeof(int));
+        for(j=0; j<modelsL[i].length; j++)
+            modelsL[i].buffer[j] = tmpNum[j];
 
-        models[i].ID = i;
-        models[i].Nbounding = 0;
+        modelsL[i].ID = i;
+        modelsL[i].Nbounding = 0;
 
         fclose(pFile);   
         free(filePath);
     }
+
+    //Copy the extracted data for modelsR.
+    modelsR = (objectsData *) malloc(numObj*sizeof(struct objectsData));
+    for(i=0; i<numObj; i++)
+    {
+        modelsR[i].name = (char *) malloc((strlen(modelsL[i].name)+1)*sizeof(char));
+        strcpy(modelsR[i].name, modelsL[i].name);
+
+        modelsR[i].ID = modelsL[i].ID;
+
+        modelsR[i].length = modelsL[i].length;
+        modelsR[i].buffer = (int *) malloc(modelsR[i].length*sizeof(int));
+        for(j=0; j<modelsR[i].length; j++)
+            modelsR[i].buffer[j] = modelsL[i].buffer[j];    
+    }
     
+    /////////////////////////////////
+    printf("Model Left:\n");
+    for(i=0; i<numObj; i++)
+    {
+        printf("\tName: %s\n", modelsL[i].name);
+        printf("\t\tID: %d\n", modelsL[i].ID);
+        printf("\t\tbuffer[%d]: ", modelsL[i].length);
+        for(j=0; j<modelsL[i].length; j++)
+            printf("%d ", modelsL[i].buffer[j]);
+        printf("\n");
+    }
+    printf("Model Right:\n");
+    for(i=0; i<numObj; i++)
+    {
+        printf("\tName: %s\n", modelsR[i].name);
+        printf("\t\tID: %d\n", modelsR[i].ID);
+        printf("\t\tbuffer[%d]: ", modelsR[i].length);
+        for(j=0; j<modelsR[i].length; j++)
+            printf("%d ", modelsR[i].buffer[j]);
+        printf("\n");
+    }
+    /////////////////////////////////
 
     return objectdetection_exec;
 }
@@ -231,7 +267,7 @@ ExecStart(const objectdetection_Camera *Camera,
         inObjects->read(self);
         if(inObjects->data(self) != NULL)
         {
-            find_object(frame, inObjects, models, numObj, self);
+            find_object(frame, inObjects, modelsL, numObj, self);
         }
         cv::imshow("output", frame);
     }
@@ -247,11 +283,18 @@ ExecStart(const objectdetection_Camera *Camera,
         cvHomography.release();
         for(i=0; i<numObj; i++)
         {
-            free(models[i].name);
-            free(models[i].buffer);
+            free(modelsL[i].name);
+            free(modelsL[i].buffer);
         }
 
-        free(models);
+        free(modelsL);
+        for(i=0; i<numObj; i++)
+        {
+            free(modelsR[i].name);
+            free(modelsR[i].buffer);
+        }
+
+        free(modelsR);
         NobjectNames=0;
         free(objectNames);
         return objectdetection_ether;
