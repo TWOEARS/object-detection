@@ -41,6 +41,6 @@
 using namespace cv;
 using namespace std;
 
-void find_object(cv::Mat frame, const objectdetection_inObjects *inObjects, objectsData *models, int numObj, genom_context self);
+void find_object(cv::Mat frame, sequence_float Data, objectsData *models, int numObj, genom_context self);
 
 #endif

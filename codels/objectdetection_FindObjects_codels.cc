@@ -245,8 +245,8 @@ InitStart(const char *objectPath, genom_context self)
  * Yields to objectdetection_exec, objectdetection_ether.
  */
 genom_event
-ExecStart(const objectdetection_Camera *Camera,
-          const objectdetection_inObjects *inObjects,
+ExecStart(const objectdetection_CameraL *CameraL,
+          const objectdetection_inObjectsL *inObjectsL,
           genom_context self)
 {
     int i, j, k, l;
@@ -258,16 +258,16 @@ ExecStart(const objectdetection_Camera *Camera,
     Rect *tmpBounding;
     cv::namedWindow("output", cv::WINDOW_AUTOSIZE);
 
-    Camera->read(self);
-    if(Camera->data(self) != NULL)
+    CameraL->read(self);
+    if(CameraL->data(self) != NULL)
     {
-        frame = Mat(Camera->data(self)->height, Camera->data(self)->width,CV_8UC3, Camera->data(self)->data._buffer);
+        frame = Mat(CameraL->data(self)->height, CameraL->data(self)->width,CV_8UC3, CameraL->data(self)->data._buffer);
         cv::cvtColor(frame, frame, CV_RGB2BGR);
 
-        inObjects->read(self);
-        if(inObjects->data(self) != NULL)
+        inObjectsL->read(self);
+        if(inObjectsL->data(self) != NULL)
         {
-            find_object(frame, inObjects, modelsL, numObj, self);
+            find_object(frame, inObjectsL->data(self)->data, modelsL, numObj, self);
         }
         cv::imshow("output", frame);
     }

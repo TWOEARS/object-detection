@@ -30,7 +30,7 @@
 
 #include "find_object_2d.h"
 
-void find_object(cv::Mat frame, const objectdetection_inObjects *inObjects, objectsData *models, int numObj, genom_context self)
+void find_object(cv::Mat frame, sequence_float Data, objectsData *models, int numObj, genom_context self)
 {
     int i, j, k, l;
     float objectWidth, objectHeight;
@@ -43,21 +43,21 @@ void find_object(cv::Mat frame, const objectdetection_inObjects *inObjects, obje
     for(i=0; i<numObj; i++)
         models[i].Nbounding = 0;
 
-    for(i=0; i<(inObjects->data(self)->data._length/12); i++)
+    for(i=0; i<(Data._length/12); i++)
     {
-        objectWidth = inObjects->data(self)->data._buffer[12*i+1];
-        objectHeight = inObjects->data(self)->data._buffer[12*i+2];
+        objectWidth = Data._buffer[12*i+1];
+        objectHeight = Data._buffer[12*i+2];
 
         // Find corners OpenCV
-        cvHomography.at<float>(0,0) = inObjects->data(self)->data._buffer[12*i+3];
-        cvHomography.at<float>(1,0) = inObjects->data(self)->data._buffer[12*i+4];
-        cvHomography.at<float>(2,0) = inObjects->data(self)->data._buffer[12*i+5];
-        cvHomography.at<float>(0,1) = inObjects->data(self)->data._buffer[12*i+6];
-        cvHomography.at<float>(1,1) = inObjects->data(self)->data._buffer[12*i+7];
-        cvHomography.at<float>(2,1) = inObjects->data(self)->data._buffer[12*i+8];
-        cvHomography.at<float>(0,2) = inObjects->data(self)->data._buffer[12*i+9];
-        cvHomography.at<float>(1,2) = inObjects->data(self)->data._buffer[12*i+10];
-        cvHomography.at<float>(2,2) = inObjects->data(self)->data._buffer[12*i+11];
+        cvHomography.at<float>(0,0) = Data._buffer[12*i+3];
+        cvHomography.at<float>(1,0) = Data._buffer[12*i+4];
+        cvHomography.at<float>(2,0) = Data._buffer[12*i+5];
+        cvHomography.at<float>(0,1) = Data._buffer[12*i+6];
+        cvHomography.at<float>(1,1) = Data._buffer[12*i+7];
+        cvHomography.at<float>(2,1) = Data._buffer[12*i+8];
+        cvHomography.at<float>(0,2) = Data._buffer[12*i+9];
+        cvHomography.at<float>(1,2) = Data._buffer[12*i+10];
+        cvHomography.at<float>(2,2) = Data._buffer[12*i+11];
         inPts.push_back(cv::Point2f(0,0));
         inPts.push_back(cv::Point2f(objectWidth,0));
         inPts.push_back(cv::Point2f(0,objectHeight));
@@ -69,7 +69,7 @@ void find_object(cv::Mat frame, const objectdetection_inObjects *inObjects, obje
         {
             for(k=0; k<models[j].length; k++)
             {
-                if((int) inObjects->data(self)->data._buffer[12*i] == models[j].buffer[k])
+                if((int) Data._buffer[12*i] == models[j].buffer[k])
                 {
                     if(models[j].Nbounding == 0)
                     {

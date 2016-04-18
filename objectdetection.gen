@@ -67,8 +67,9 @@ component objectdetection{
 	require		"genom3 >= 2.99.24";
     codels-require "opencv";
 
-    port in detectionO::sensor_msgs__Image Camera;
-    port in find_object_2d::std_msgs__Float32MultiArray inObjects;
+    port in detectionO::sensor_msgs__Image CameraL;
+    port in find_object_2d::std_msgs__Float32MultiArray inObjectsL;
+
 
     task FindObjects{
         period      33 ms;
@@ -79,7 +80,7 @@ component objectdetection{
     activity Start(in string objectPath = "/tmp/objects/")
     {
         codel<start> InitStart(local in objectPath) yield exec, ether;
-        codel<exec> ExecStart(port in Camera, port in inObjects) yield exec, ether;
+        codel<exec> ExecStart(port in CameraL, port in inObjectsL) yield exec, ether;
 
         task FindObjects;
     };
