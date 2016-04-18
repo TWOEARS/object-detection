@@ -291,6 +291,18 @@ ExecStart(const objectdetection_CameraL *CameraL,
         }
         cv::imshow("output right", frame);
     }
+
+    //Triangulation
+    for(i=0; i<numObj; i++)
+    {
+        if((modelsL[i].found == TRUE) && modelsR[i].found == TRUE)
+        {
+            printf("%s found in both images.\n", modelsL[i].name);
+            printf("\tLeft: %d %d\n", modelsL[i].position.x + (int)(modelsL[i].position.width/2), modelsL[i].position.y + (int)(modelsL[i].position.height/2));
+            printf("\tRight: %d %d\n\n", modelsR[i].position.x + (int)(modelsR[i].position.width/2), modelsR[i].position.y + (int)(modelsR[i].position.height/2));
+            
+        }   
+    }
         
 
     if(cv::waitKey(30) == -1)
