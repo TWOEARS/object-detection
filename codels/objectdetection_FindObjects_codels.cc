@@ -234,6 +234,7 @@ InitStart(const char *objectPath, genom_context self)
             printf("%d ", modelsR[i].buffer[j]);
         printf("\n");
     }
+    printf("\n");
     /////////////////////////////////
 
     return objectdetection_exec;
@@ -247,6 +248,8 @@ InitStart(const char *objectPath, genom_context self)
 genom_event
 ExecStart(const objectdetection_CameraL *CameraL,
           const objectdetection_inObjectsL *inObjectsL,
+          const objectdetection_CameraR *CameraR,
+          const objectdetection_inObjectsR *inObjectsR,
           genom_context self)
 {
     int i, j, k, l;
@@ -256,8 +259,10 @@ ExecStart(const objectdetection_CameraL *CameraL,
     std::vector<Rect> bounding;
     Rect object, R1, R2;
     Rect *tmpBounding;
-    cv::namedWindow("output", cv::WINDOW_AUTOSIZE);
+    cv::namedWindow("output left", cv::WINDOW_NORMAL);
+    cv::namedWindow("output right", cv::WINDOW_NORMAL);
 
+    //Left camera
     CameraL->read(self);
     if(CameraL->data(self) != NULL)
     {
@@ -269,7 +274,22 @@ ExecStart(const objectdetection_CameraL *CameraL,
         {
             find_object(frame, inObjectsL->data(self)->data, modelsL, numObj, self);
         }
-        cv::imshow("output", frame);
+        cv::imshow("output left", frame);
+    }
+
+    //Right camera
+    CameraR->read(self);
+    if(CameraR->data(self) != NULL)
+    {
+        frame = Mat(CameraR->data(self)->height, CameraR->data(self)->width,CV_8UC3, CameraR->data(self)->data._buffer);
+        cv::cvtColor(frame, frame, CV_RGB2BGR);
+
+        inObjectsR->read(self);
+        if(inObjectsR->data(self) != NULL)
+        {
+            find_object(frame, inObjectsR->data(self)->data, modelsR, numObj, self);
+        }
+        cv::imshow("output right", frame);
     }
         
 

@@ -69,6 +69,8 @@ component objectdetection{
 
     port in detectionO::sensor_msgs__Image CameraL;
     port in find_object_2d::std_msgs__Float32MultiArray inObjectsL;
+    port in detectionO::sensor_msgs__Image CameraR;
+    port in find_object_2d::std_msgs__Float32MultiArray inObjectsR;
 
 
     task FindObjects{
@@ -80,7 +82,8 @@ component objectdetection{
     activity Start(in string objectPath = "/tmp/objects/")
     {
         codel<start> InitStart(local in objectPath) yield exec, ether;
-        codel<exec> ExecStart(port in CameraL, port in inObjectsL) yield exec, ether;
+        codel<exec> ExecStart(port in CameraL, port in inObjectsL,
+                              port in CameraR, port in inObjectsR) yield exec, ether;
 
         task FindObjects;
     };
@@ -90,7 +93,8 @@ component objectdetection{
 /* 
 To compile: genom3 skeleton -l c++ -i objectdetection.gen
 
-::objectdetection::connect_port Camera /stereo/left/image_rect_color
-::objectdetection::connect_port inObjects /objects
-
+::objectdetection::connect_port CameraL /stereo/left/image_rect_color
+::objectdetection::connect_port inObjectsL find_objects_2d_Left/objects
+::objectdetection::connect_port CameraR /stereo/right/image_rect_color
+::objectdetection::connect_port inObjectsR find_objects_2d_Right/objects
 */
