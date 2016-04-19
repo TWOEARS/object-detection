@@ -268,7 +268,7 @@ ExecStart(const objectdetection_CameraL *CameraL,
         inObjectsL->read(self);
         if(inObjectsL->data(self) != NULL)
         {
-            find_object(frame, inObjectsL->data(self)->data, modelsL, numObj, self);
+            find_object(frame, inObjectsL->data(self)->objects.data, modelsL, numObj, self);
         }
         cv::imshow("output left", frame);
     }
@@ -283,7 +283,7 @@ ExecStart(const objectdetection_CameraL *CameraL,
         inObjectsR->read(self);
         if(inObjectsR->data(self) != NULL)
         {
-            find_object(frame, inObjectsR->data(self)->data, modelsR, numObj, self);
+            find_object(frame, inObjectsR->data(self)->objects.data, modelsR, numObj, self);
         }
         cv::imshow("output right", frame);
     }

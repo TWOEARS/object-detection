@@ -33,6 +33,19 @@
 
 module find_object_2d
 {
+    struct timestamp
+    {
+        unsigned long sec;
+        unsigned long usec;
+    };
+
+    struct std_msgs__Header
+    {
+        unsigned long seq; /*uint32_t*/
+        timestamp stamp;
+        string frame_id;
+    };
+
     struct std_msgs__MultiArrayDimension
     {
         string label;
@@ -52,7 +65,14 @@ module find_object_2d
         sequence<float> data;   //[ObjectId1, objectWidth, objectHeight, h11, h12, h13, h21, h22, h23, h31, h32, h33, ObjectId2...] 
     };
 
-#pragma masquerade ros std_msgs__Float32MultiArray std_msgs/Float32MultiArray
+    struct find_object_2d__ObjectsStamped
+    {
+        std_msgs__Header header;
+        std_msgs__Float32MultiArray objects;
+    };
+
+//#pragma masquerade ros std_msgs__Float32MultiArray std_msgs/Float32MultiArray
+#pragma masquerade ros find_object_2d__ObjectsStamped find_object_2d/ObjectsStamped
 };
 
 #endif
