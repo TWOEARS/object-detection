@@ -46,6 +46,12 @@ module triangulation
         string frame_id;
     };
 
+    struct image_coordinates
+    {
+        float x;
+        float y;
+    };
+
     struct world_coordinates
     {
         float x;
@@ -53,18 +59,34 @@ module triangulation
         float z;
     };
 
-    struct Objects
+    struct data
     {
         string name;
+        boolean found;
         unsigned long ID;
+        image_coordinates coordinates;
+    };
+
+    struct Objects
+    {
+        timestamp stamp;    //Timestamp of each frame.
+        sequence<data> info;
+    };
+
+    struct triangulation_data
+    {
+        boolean triangulated;
+        string objectName;
         world_coordinates coordinates;
     };
 
     struct Frame
     {
-        std_msgs__Header header;
+        std_msgs__Header header;    //Current time of publishing the port.
         unsigned long frameNumber;
-        sequence<Objects> objects;
+        Objects left;
+        Objects right;
+        sequence<triangulation_data> triangulation;
     };
 
     struct Detections

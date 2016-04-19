@@ -74,7 +74,7 @@ component objectdetection{
     port in detectionO::sensor_msgs__Image CameraR;
     port in find_object_2d::find_object_2d__ObjectsStamped inObjectsR;
     port in calibrationParameters::sensor_msgs__CameraInfo RightCameraParameters;
-    port out triangulation::Detections Detections;
+    port out triangulation::Frame Detections;
 
 
     task FindObjects{
@@ -86,7 +86,7 @@ component objectdetection{
     activity Start(in string objectPath = "/tmp/objects/",
                    in unsigned short frameHistory = 5  : "Number of frames to publish on the port.")
     {
-        codel<start> InitStart(local in objectPath, port in RightCameraParameters) yield exec, ether;
+        codel<start> InitStart(local in objectPath, port in RightCameraParameters, port out Detections) yield exec, ether;
         codel<exec> ExecStart(port in CameraL, port in inObjectsL,
                               port in CameraR, port in inObjectsR,
                               local in frameHistory, port out Detections) yield exec, ether;

@@ -19,7 +19,7 @@ using namespace std;
 /* --- Task FindObjects ------------------------------------------------- */
 
 //std::vector<char *> objectNames;
-uint32_t NobjectNames=0;
+uint32_t NobjectNames=0, nbFrame=0;
 char **objectNames, **tmpobjectNames;
 
 objectsData* modelsL, *modelsR;
@@ -36,6 +36,7 @@ double Fx, T; //Fx: Focal length - T: Base line.
 genom_event
 InitStart(const char *objectPath,
           const objectdetection_RightCameraParameters *RightCameraParameters,
+          const objectdetection_Detections *Detections,
           genom_context self)
 {
     int i, j, count;
@@ -229,6 +230,27 @@ InitStart(const char *objectPath,
         return objectdetection_ether;
     };
 
+    nbFrame = 0;
+
+    //Allocate data for the output port.
+    if(Detections->data(self)->left.info._length == 0)
+    {
+        genom_sequence_reserve(&(Detections->data(self)->left.info), numObj);
+        Detections->data(self)->left.info._length = numObj;
+    }
+
+    if(Detections->data(self)->right.info._length == 0)
+    {
+        genom_sequence_reserve(&(Detections->data(self)->right.info), numObj);
+        Detections->data(self)->right.info._length = numObj;
+    }
+
+    if(Detections->data(self)->triangulation._length == 0)
+    {
+        genom_sequence_reserve(&(Detections->data(self)->triangulation), numObj);
+        Detections->data(self)->triangulation._length = numObj;
+    }
+
     return objectdetection_exec;
 }
 
@@ -254,6 +276,7 @@ ExecStart(const objectdetection_CameraL *CameraL,
     Rect object, R1, R2;
     Rect *tmpBounding;
     triangulation_world_coordinates triangulationResult;
+    bool cameraL=FALSE, cameraR=FALSE, objectsL=FALSE, objectsR=FALSE, triang=FALSE;
 
     cv::namedWindow("output left", cv::WINDOW_NORMAL);
     cv::namedWindow("output right", cv::WINDOW_NORMAL);
@@ -262,13 +285,30 @@ ExecStart(const objectdetection_CameraL *CameraL,
     CameraL->read(self);
     if(CameraL->data(self) != NULL)
     {
+        cameraL=TRUE;
         frame = Mat(CameraL->data(self)->height, CameraL->data(self)->width,CV_8UC3, CameraL->data(self)->data._buffer);
         cv::cvtColor(frame, frame, CV_RGB2BGR);
 
         inObjectsL->read(self);
         if(inObjectsL->data(self) != NULL)
         {
+            objectsL = TRUE;
+            Detections->data(self)->left.stamp.sec = inObjectsL->data(self)->header.stamp.sec;
+            Detections->data(self)->left.stamp.usec = inObjectsL->data(self)->header.stamp.usec;
             find_object(frame, inObjectsL->data(self)->objects.data, modelsL, numObj, self);
+            
+            for(i=0; i<numObj; i++)
+            {
+                if(modelsL[i].found == TRUE)
+                {
+                    Detections->data(self)->left.info._buffer[i].found = TRUE;
+                    Detections->data(self)->left.info._buffer[i].name = (char *) malloc((strlen(modelsL[i].name)+1)*sizeof(char));  //TODO: REMEMBER TO FREE THIS!
+                    strcpy(Detections->data(self)->left.info._buffer[i].name, modelsL[i].name);
+                }
+                else
+                    Detections->data(self)->left.info._buffer[i].found = FALSE;
+            }
+
         }
         cv::imshow("output left", frame);
     }
@@ -277,15 +317,26 @@ ExecStart(const objectdetection_CameraL *CameraL,
     CameraR->read(self);
     if(CameraR->data(self) != NULL)
     {
+        cameraR = TRUE;
         frame = Mat(CameraR->data(self)->height, CameraR->data(self)->width,CV_8UC3, CameraR->data(self)->data._buffer);
         cv::cvtColor(frame, frame, CV_RGB2BGR);
 
         inObjectsR->read(self);
         if(inObjectsR->data(self) != NULL)
         {
+            objectsR = TRUE;
+            Detections->data(self)->right.stamp.sec = inObjectsR->data(self)->header.stamp.sec;
+            Detections->data(self)->right.stamp.usec = inObjectsR->data(self)->header.stamp.usec;
             find_object(frame, inObjectsR->data(self)->objects.data, modelsR, numObj, self);
+            
         }
         cv::imshow("output right", frame);
+    }
+
+    if(cameraL==TRUE || cameraR==TRUE)
+    {
+        nbFrame++;
+        Detections->data(self)->frameNumber = nbFrame;
     }
 
     //Triangulation
@@ -293,13 +344,24 @@ ExecStart(const objectdetection_CameraL *CameraL,
     {
         if((modelsL[i].found == TRUE) && modelsR[i].found == TRUE)
         {
-            printf("%s found in both images.\n", modelsL[i].name);
-            printf("\tLeft: %d %d\n", modelsL[i].position.x + (int)(modelsL[i].position.width/2), modelsL[i].position.y + (int)(modelsL[i].position.height/2));
-            printf("\tRight: %d %d\n\n", modelsR[i].position.x + (int)(modelsR[i].position.width/2), modelsR[i].position.y + (int)(modelsR[i].position.height/2));
+            triang = TRUE;
+            //printf("%s found in both images.\n", modelsL[i].name);
+            //printf("\tLeft: %d %d\n", modelsL[i].position.x + (int)(modelsL[i].position.width/2), modelsL[i].position.y + (int)(modelsL[i].position.height/2));
+            //printf("\tRight: %d %d\n\n", modelsR[i].position.x + (int)(modelsR[i].position.width/2), modelsR[i].position.y + (int)(modelsR[i].position.height/2));
             triangulationResult = triangulation(Fx, T, modelsL[i].position.x + (int)(modelsL[i].position.width/2), modelsL[i].position.y + (int)(modelsL[i].position.height/2), modelsR[i].position.x + (int)(modelsR[i].position.width/2));
-            printf("%f %f %f\n", triangulationResult.x, triangulationResult.y, triangulationResult.z);
-        }   
+            //printf("%f %f %f\n", triangulationResult.x, triangulationResult.y, triangulationResult.z);
+            //Detections->data(self)->coordinates = triangulationResult;
+        }
+        else
+        {
+            /*Detections->data(self)->coordinates.x = 0;
+            Detections->data(self)->coordinates.y = 0;
+            Detections->data(self)->coordinates.z = 0;*/
+        } 
     }
+
+    //Write on the port.
+    Detections->write(self);
         
 
     if(cv::waitKey(30) == -1)
@@ -326,6 +388,12 @@ ExecStart(const objectdetection_CameraL *CameraL,
         free(modelsR);
         NobjectNames=0;
         free(objectNames);
+
+        /*for(i=0; i<numObj; i++)
+        {
+            if(modelsL[i].found == TRUE)
+                free(Detections->data(self)->left.info._buffer[i].name);
+        }*///TODO: IS IT NECESSARY TO FREE?
         return objectdetection_ether;
     }
 }
