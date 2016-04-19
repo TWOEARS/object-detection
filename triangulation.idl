@@ -1,4 +1,4 @@
-/*  Copyright (c) 2016, LAAS/CNRS
+/*  Copyright (c) 2015, LAAS/CNRS
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without 
@@ -28,61 +28,48 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "misc.h"
-#include <stdio.h>
+#ifndef	TRIANGULATION_STRUCT_H
+#define	TRIANGULATION_STRUCT_H
 
-Rect commonArea(std::vector<Rect> bounding)
+module triangulation
 {
-    int i;
-    Rect object, R1, R2;
-
-    if(bounding.size()>0)
+    struct timestamp
     {
-        if(bounding.size() == 1)
-            object = bounding.at(0);
-        if(bounding.size() == 2)
-        {
-            object = bounding.at(0) & bounding.at(1);
-            if(!(object.area()>0))
-                object = Rect(0,0,0,0);
-            
-        }
-        if(bounding.size()>2)
-        {
-            object = bounding.at(0) & bounding.at(1);
-            for(i=2; i<bounding.size(); i++)
-            {
-                R1 = object;
-                R2 = bounding.at(i);
-                object = R1 & R2;
-            }
-        }
-    }
-    return object;
-}
+        unsigned long sec;
+        unsigned long usec;
+    };
 
-triangulation_world_coordinates triangulation(double f, double T, int leftX, int leftY, int rightX)
-{
-    double x, y, z;
-    int disparity;
-    triangulation_world_coordinates result;
+    struct std_msgs__Header
+    {
+        unsigned long seq; /*uint32_t*/
+        timestamp stamp;
+        string frame_id;
+    };
 
-    /*printf("Fx: %f\n", f);
-    printf("T: %f\n", T);
-    printf("leftX: %d\n", leftX);
-    printf("leftY: %d\n", leftY);
-    printf("rightX: %d\n", rightX);*/
+    struct world_coordinates
+    {
+        float x;
+        float y;
+        float z;
+    };
 
-    disparity = rightX - leftX;
-    //printf("disparity: %d\n", disparity);
-    z = (float) ((f*T) / disparity);
-    x = (float) ((leftX*z) / f);
-    y = (float) ((leftY*z) / f);
+    struct Objects
+    {
+        string name;
+        unsigned long ID;
+        world_coordinates coordinates;
+    };
 
-    //printf("triangulation: %f %f %f\n", x, y, z);
-    result.x = (float) x;
-    result.y = (float) y;
-    result.z = (float) z;
+    struct Frame
+    {
+        std_msgs__Header header;
+        unsigned long frameNumber;
+        sequence<Objects> objects;
+    };
 
-    return result;
-}
+    struct Detections
+    {
+        sequence<Frame> detections;
+    };
+};
+#endif
