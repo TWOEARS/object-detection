@@ -48,8 +48,8 @@ module triangulation
 
     struct image_coordinates
     {
-        float x;
-        float y;
+        unsigned long x;
+        unsigned long y;
     };
 
     struct world_coordinates

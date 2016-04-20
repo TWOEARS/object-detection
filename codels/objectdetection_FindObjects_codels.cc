@@ -297,13 +297,17 @@ ExecStart(const objectdetection_CameraL *CameraL,
             Detections->data(self)->left.stamp.usec = inObjectsL->data(self)->header.stamp.usec;
             find_object(frame, inObjectsL->data(self)->objects.data, modelsL, numObj, self);
             
+            //Copy data to port.
             for(i=0; i<numObj; i++)
             {
+                Detections->data(self)->left.info._buffer[i].name = (char *) malloc((strlen(modelsL[i].name)+1)*sizeof(char));
+                strcpy(Detections->data(self)->left.info._buffer[i].name, modelsL[i].name);
+                Detections->data(self)->left.info._buffer[i].ID = modelsL[i].ID;
                 if(modelsL[i].found == TRUE)
                 {
                     Detections->data(self)->left.info._buffer[i].found = TRUE;
-                    Detections->data(self)->left.info._buffer[i].name = (char *) malloc((strlen(modelsL[i].name)+1)*sizeof(char));  //TODO: REMEMBER TO FREE THIS!
-                    strcpy(Detections->data(self)->left.info._buffer[i].name, modelsL[i].name);
+                    Detections->data(self)->left.info._buffer[i].coordinates.x = modelsL[i].position.x + ((int)(modelsL[i].position.width/2)); 
+                    Detections->data(self)->left.info._buffer[i].coordinates.y = modelsL[i].position.y + (int)(modelsL[i].position.height/2);
                 }
                 else
                     Detections->data(self)->left.info._buffer[i].found = FALSE;
