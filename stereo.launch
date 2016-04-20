@@ -1,0 +1,18 @@
+<launch>
+	<!-- Nodes -->
+    <group ns="find_objects_2d_Left">
+	    <node name="find_object_2d" pkg="find_object_2d" type="find_object_2d" output="screen">
+		    <remap from="image" to="/stereo/left/image_rect_color"/>
+		    <param name="gui" value="false" type="bool"/>
+		    <param name="session_path" value="/home/ariel/Documents/LAAS/twoears/repositories/objectdetection/sessionPhone.bin" type="str"/>
+	    </node>
+    </group>
+
+    <group ns="find_objects_2d_Right">
+	    <node name="find_object_2d" pkg="find_object_2d" type="find_object_2d" output="screen">
+		    <remap from="image" to="/stereo/right/image_rect_color"/>
+		    <param name="gui" value="false" type="bool"/>
+		    <param name="session_path" value="/home/ariel/Documents/LAAS/twoears/repositories/objectdetection/sessionPhone.bin" type="str"/>
+	    </node>
+    </group>
+</launch>
