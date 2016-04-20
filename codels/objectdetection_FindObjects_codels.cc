@@ -310,7 +310,11 @@ ExecStart(const objectdetection_CameraL *CameraL,
                     Detections->data(self)->left.info._buffer[i].coordinates.y = modelsL[i].position.y + (int)(modelsL[i].position.height/2);
                 }
                 else
+                {
                     Detections->data(self)->left.info._buffer[i].found = FALSE;
+                    Detections->data(self)->left.info._buffer[i].coordinates.x = 0;
+                    Detections->data(self)->left.info._buffer[i].coordinates.y = 0;
+                }
             }
 
         }
@@ -332,7 +336,26 @@ ExecStart(const objectdetection_CameraL *CameraL,
             Detections->data(self)->right.stamp.sec = inObjectsR->data(self)->header.stamp.sec;
             Detections->data(self)->right.stamp.usec = inObjectsR->data(self)->header.stamp.usec;
             find_object(frame, inObjectsR->data(self)->objects.data, modelsR, numObj, self);
-            
+
+            //Copy data to port.
+            for(i=0; i<numObj; i++)
+            {
+                Detections->data(self)->right.info._buffer[i].name = (char *) malloc((strlen(modelsR[i].name)+1)*sizeof(char));
+                strcpy(Detections->data(self)->right.info._buffer[i].name, modelsR[i].name);
+                Detections->data(self)->right.info._buffer[i].ID = modelsR[i].ID;
+                if(modelsR[i].found == TRUE)
+                {
+                    Detections->data(self)->right.info._buffer[i].found = TRUE;
+                    Detections->data(self)->right.info._buffer[i].coordinates.x = modelsR[i].position.x + ((int)(modelsR[i].position.width/2)); 
+                    Detections->data(self)->right.info._buffer[i].coordinates.y = modelsR[i].position.y + (int)(modelsR[i].position.height/2);
+                }
+                else
+                {
+                    Detections->data(self)->right.info._buffer[i].found = FALSE;
+                    Detections->data(self)->right.info._buffer[i].coordinates.x = 0;
+                    Detections->data(self)->right.info._buffer[i].coordinates.y = 0;
+                }
+            }
         }
         cv::imshow("output right", frame);
     }
@@ -346,21 +369,21 @@ ExecStart(const objectdetection_CameraL *CameraL,
     //Triangulation
     for(i=0; i<numObj; i++)
     {
+        Detections->data(self)->triangulation._buffer[i].objectName = (char *) malloc((strlen(modelsL[i].name)+1)*sizeof(char));
+        strcpy(Detections->data(self)->triangulation._buffer[i].objectName, modelsL[i].name);
         if((modelsL[i].found == TRUE) && modelsR[i].found == TRUE)
         {
             triang = TRUE;
-            //printf("%s found in both images.\n", modelsL[i].name);
-            //printf("\tLeft: %d %d\n", modelsL[i].position.x + (int)(modelsL[i].position.width/2), modelsL[i].position.y + (int)(modelsL[i].position.height/2));
-            //printf("\tRight: %d %d\n\n", modelsR[i].position.x + (int)(modelsR[i].position.width/2), modelsR[i].position.y + (int)(modelsR[i].position.height/2));
+            Detections->data(self)->triangulation._buffer[i].triangulated = TRUE;
             triangulationResult = triangulation(Fx, T, modelsL[i].position.x + (int)(modelsL[i].position.width/2), modelsL[i].position.y + (int)(modelsL[i].position.height/2), modelsR[i].position.x + (int)(modelsR[i].position.width/2));
-            //printf("%f %f %f\n", triangulationResult.x, triangulationResult.y, triangulationResult.z);
-            //Detections->data(self)->coordinates = triangulationResult;
+            Detections->data(self)->triangulation._buffer[i].coordinates = triangulationResult;
         }
         else
         {
-            /*Detections->data(self)->coordinates.x = 0;
-            Detections->data(self)->coordinates.y = 0;
-            Detections->data(self)->coordinates.z = 0;*/
+            Detections->data(self)->triangulation._buffer[i].triangulated = FALSE;
+            Detections->data(self)->triangulation._buffer[i].coordinates.x = 0;
+            Detections->data(self)->triangulation._buffer[i].coordinates.y = 0;
+            Detections->data(self)->triangulation._buffer[i].coordinates.z = 0;
         } 
     }
 
@@ -393,11 +416,6 @@ ExecStart(const objectdetection_CameraL *CameraL,
         NobjectNames=0;
         free(objectNames);
 
-        /*for(i=0; i<numObj; i++)
-        {
-            if(modelsL[i].found == TRUE)
-                free(Detections->data(self)->left.info._buffer[i].name);
-        }*///TODO: IS IT NECESSARY TO FREE?
         return objectdetection_ether;
     }
 }
