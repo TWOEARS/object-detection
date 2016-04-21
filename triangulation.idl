@@ -50,6 +50,8 @@ module triangulation
     {
         unsigned long x;
         unsigned long y;
+        unsigned long width;
+        unsigned long height;
     };
 
     struct world_coordinates

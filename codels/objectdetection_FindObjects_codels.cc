@@ -306,14 +306,18 @@ ExecStart(const objectdetection_CameraL *CameraL,
                 if(modelsL[i].found == TRUE)
                 {
                     Detections->data(self)->left.info._buffer[i].found = TRUE;
-                    Detections->data(self)->left.info._buffer[i].coordinates.x = modelsL[i].position.x + ((int)(modelsL[i].position.width/2)); 
-                    Detections->data(self)->left.info._buffer[i].coordinates.y = modelsL[i].position.y + (int)(modelsL[i].position.height/2);
+                    Detections->data(self)->left.info._buffer[i].coordinates.x = modelsL[i].position.x; 
+                    Detections->data(self)->left.info._buffer[i].coordinates.y = modelsL[i].position.y;
+                    Detections->data(self)->left.info._buffer[i].coordinates.width = modelsL[i].position.width;
+                    Detections->data(self)->left.info._buffer[i].coordinates.height = modelsL[i].position.height;
                 }
                 else
                 {
                     Detections->data(self)->left.info._buffer[i].found = FALSE;
                     Detections->data(self)->left.info._buffer[i].coordinates.x = 0;
                     Detections->data(self)->left.info._buffer[i].coordinates.y = 0;
+                    Detections->data(self)->left.info._buffer[i].coordinates.width = 0;
+                    Detections->data(self)->left.info._buffer[i].coordinates.height = 0;
                 }
             }
 
@@ -346,14 +350,18 @@ ExecStart(const objectdetection_CameraL *CameraL,
                 if(modelsR[i].found == TRUE)
                 {
                     Detections->data(self)->right.info._buffer[i].found = TRUE;
-                    Detections->data(self)->right.info._buffer[i].coordinates.x = modelsR[i].position.x + ((int)(modelsR[i].position.width/2)); 
-                    Detections->data(self)->right.info._buffer[i].coordinates.y = modelsR[i].position.y + (int)(modelsR[i].position.height/2);
+                    Detections->data(self)->right.info._buffer[i].coordinates.x = modelsR[i].position.x; 
+                    Detections->data(self)->right.info._buffer[i].coordinates.y = modelsR[i].position.y;
+                    Detections->data(self)->right.info._buffer[i].coordinates.width = modelsR[i].position.width;
+                    Detections->data(self)->right.info._buffer[i].coordinates.height = modelsR[i].position.height;
                 }
                 else
                 {
                     Detections->data(self)->right.info._buffer[i].found = FALSE;
                     Detections->data(self)->right.info._buffer[i].coordinates.x = 0;
                     Detections->data(self)->right.info._buffer[i].coordinates.y = 0;
+                    Detections->data(self)->right.info._buffer[i].coordinates.width = 0;
+                    Detections->data(self)->right.info._buffer[i].coordinates.height = 0;
                 }
             }
         }
