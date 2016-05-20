@@ -39,6 +39,7 @@
 
 #define TRUE    1
 #define FALSE   0
+#define pi      3.14159
 
 using namespace cv;
 using namespace std;

@@ -59,6 +59,7 @@ module triangulation
         float x;
         float y;
         float z;
+        float azimuth;
     };
 
     struct data

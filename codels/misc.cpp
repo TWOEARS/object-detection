@@ -63,6 +63,7 @@ Rect commonArea(std::vector<Rect> bounding)
 
 triangulation_world_coordinates triangulation(double f, double T, int leftX, int leftY, int rightX)
 {
+/* http://www.dis.uniroma1.it/~iocchi/stereo/triang.html */
     double x, y, z;
     int disparity;
     triangulation_world_coordinates result;
@@ -83,6 +84,7 @@ triangulation_world_coordinates triangulation(double f, double T, int leftX, int
     result.x = (float) x;
     result.y = (float) y;
     result.z = (float) z;
+    result.azimuth = atan(result.x/result.z) * (180/pi);
 
     return result;
 }

@@ -392,6 +392,7 @@ ExecStart(const objectdetection_CameraL *CameraL,
             Detections->data(self)->triangulation._buffer[i].coordinates.x = 0;
             Detections->data(self)->triangulation._buffer[i].coordinates.y = 0;
             Detections->data(self)->triangulation._buffer[i].coordinates.z = 0;
+            Detections->data(self)->triangulation._buffer[i].coordinates.azimuth = 0;
         } 
     }
 
