@@ -57,6 +57,6 @@ struct objectsData
 };
 
 Rect commonArea(std::vector<Rect> bounding);
-triangulation_world_coordinates triangulation(double f, double T, int leftX, int leftY, int rightX);
+triangulation_world_coordinates triangulation(float Fx, float Fy, float Cx, float Cy, float T, int leftX, int leftY, int rightX);
 
 #endif

@@ -25,7 +25,8 @@ char **objectNames, **tmpobjectNames;
 objectsData* modelsL, *modelsR;
 int numObj;
 
-double Fx, T; //Fx: Focal length - T: Base line.
+//double Fx, T; //Fx: Focal length - T: Base line.
+float Fx, Fy, Cx, Cy, T, bp;
 /* --- Activity Start --------------------------------------------------- */
 
 /** Codel InitStart of activity Start.
@@ -222,7 +223,11 @@ InitStart(const char *objectPath,
     if(RightCameraParameters->data(self) != NULL)
     {
         Fx = RightCameraParameters->data(self)->P[0];
-        T = (-1) * (RightCameraParameters->data(self)->P[3]/RightCameraParameters->data(self)->P[0]);
+        Fy = RightCameraParameters->data(self)->P[5];
+        Cx = RightCameraParameters->data(self)->P[2];
+        Cy = RightCameraParameters->data(self)->P[6];
+        bp = (-1) * RightCameraParameters->data(self)->P[3];
+        T = bp/Fx;
     }
     else
     {
@@ -383,7 +388,11 @@ ExecStart(const objectdetection_CameraL *CameraL,
         {
             triang = TRUE;
             Detections->data(self)->triangulation._buffer[i].triangulated = TRUE;
-            triangulationResult = triangulation(Fx, T, modelsL[i].position.x + (int)(modelsL[i].position.width/2), modelsL[i].position.y + (int)(modelsL[i].position.height/2), modelsR[i].position.x + (int)(modelsR[i].position.width/2));
+            triangulationResult = triangulation(Fx, Fy, Cx, Cy, T, 
+                                modelsL[i].position.x + (int)(modelsL[i].position.width/2), 
+                                modelsL[i].position.y + (int)(modelsL[i].position.height/2), 
+                                modelsR[i].position.x + (int)(modelsR[i].position.width/2));
+
             Detections->data(self)->triangulation._buffer[i].coordinates = triangulationResult;
         }
         else

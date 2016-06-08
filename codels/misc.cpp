@@ -61,30 +61,30 @@ Rect commonArea(std::vector<Rect> bounding)
     return object;
 }
 
-triangulation_world_coordinates triangulation(double f, double T, int leftX, int leftY, int rightX)
+triangulation_world_coordinates triangulation(float Fx, float Fy, float Cx, float Cy, float T, int leftX, int leftY, int rightX)
 {
-/* http://www.dis.uniroma1.it/~iocchi/stereo/triang.html */
     double x, y, z;
     int disparity;
     triangulation_world_coordinates result;
 
-    /*printf("Fx: %f\n", f);
+    /*printf("Fx: %f\n", Fx);
     printf("T: %f\n", T);
     printf("leftX: %d\n", leftX);
     printf("leftY: %d\n", leftY);
     printf("rightX: %d\n", rightX);*/
 
     disparity = rightX - leftX;
-    //printf("disparity: %d\n", disparity);
-    z = (float) ((f*T) / disparity);
-    x = (float) ((leftX*z) / f);
-    y = (float) ((leftY*z) / f);
+    //printf("disparity: %d\n\n", disparity);
+    /*z = (float) ((Fx*T) / disparity);
+    x = (float) ((z*(leftX-Cx)) / Fx);
+    y = (float) ((z*(leftY-Cy)) / Fy);*/
 
     //printf("triangulation: %f %f %f\n", x, y, z);
-    result.x = (float) x;
-    result.y = (float) y;
-    result.z = (float) z;
+    result.z = ((Fx*T) / disparity);
+    result.x = ((result.z*(leftX-Cx)) / Fx);
+    result.y = ((result.z*(leftY-Cy)) / Fy);
     result.azimuth = atan(result.x/result.z) * (180/pi);
+    //printf("triangulation: %f %f %f %f\n", result.x, result.y, result.z, result.azimuth);
 
     return result;
 }
