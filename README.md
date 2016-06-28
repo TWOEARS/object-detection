@@ -1,10 +1,10 @@
-0. This genom3 module is based on the ROS package called * *find_object_2d* * (http://wiki.ros.org/find_object_2d)
+1. This genom3 module is based on the ROS package called *find_object_2d* (http://wiki.ros.org/find_object_2d). **It is absolutely necessary to install it before proceeding.** 
 
-1 - How to install find_object_2d
+  1. How to install find_object_2d
     In a terminal, type: 
         > sudo apt-get install ros-indigo-find-object-2d
 
-2 - Clone this repository and compile the genom3 module.
+2. Clone this repository and compile the genom3 module.
     To compile the module, enter the following commands:
         > genom3 skeleton -l c++ -i objectdetection.gen
         > ./bootstrap.sh
