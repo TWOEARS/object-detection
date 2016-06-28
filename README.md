@@ -1,4 +1,4 @@
-0 - This genom3 module is based on the ROS package called find_object_2d (http://wiki.ros.org/find_object_2d)
+0. This genom3 module is based on the ROS package called * *find_object_2d* * (http://wiki.ros.org/find_object_2d)
 
 1 - How to install find_object_2d
     In a terminal, type: 
@@ -35,7 +35,7 @@
 7 - Save the session by going to file->save session. Check that the name has to be *.bin. This saves all the objects learned in previous steps.
 
 8 - Once all the objects have been 'learned' (preferably from different angles), create one text file per object and include in each one the ID number captured by the GUI for each angle. For example, if the captured images for object named 'phone' go from 0 to 2 and for 'fan' go from 3 to 5, then:
-    * pone.txt should look like this:
+    * phone.txt should look like this:
         0
         1
         2
