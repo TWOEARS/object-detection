@@ -28,7 +28,7 @@
         	    <node name="find_object_2d" pkg="find_object_2d" type="find_object_2d" output="screen">
         		    <remap from="image" to="/stereo/left/image_rect_color"/>
         		    <param name="gui" value="false" type="bool"/>
-        		    <param name="session_path" value=/home/USER_PATH/objectdetection/sessionOBJECTS.bin" type="str"/>
+        		    <param name="session_path" value="/home/USER_PATH/objectdetection/sessionOBJECTS.bin" type="str"/>
         	    </node>
             </group>
         
@@ -36,7 +36,7 @@
         	    <node name="find_object_2d" pkg="find_object_2d" type="find_object_2d" output="screen">
         		    <remap from="image" to="/stereo/right/image_rect_color"/>
         		    <param name="gui" value="false" type="bool"/>
-        		    <param name="session_path" value=/home/USER_PATH/objectdetection/sessionOBJECTS.bin" type="str"/>
+        		    <param name="session_path" value="/home/USER_PATH/objectdetection/sessionOBJECTS.bin" type="str"/>
         	    </node>
             </group>
         </launch>
@@ -49,7 +49,7 @@
 
 7. "Learn" all the objects that you want to detect.
   1. Check that your (mono) camera is publishing its output to a ros topic (sensor_msgs/Image message).
-  2. Considering that your camera publishes to /stereo/left/image_rect_color, launch the **find_object_2d gui**, keeping in mind that the image toppic has to be remapped acordignly to your settings.
+  2. Considering that your camera publishes to /stereo/left/image_rect_color, launch the **find_object_2d gui**, keeping in mind that the image topic has to be remapped accordingly to your settings.
 
         ```
         rosrun find_object_2d find_object_2d image:=/stereo/left/image_rect_color
@@ -69,7 +69,7 @@
         1
         2
         
-        fan.tx should look like this:
+        fan.txt should look like this:
         3
         4
         5
