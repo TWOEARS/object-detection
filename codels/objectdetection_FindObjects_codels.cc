@@ -38,7 +38,7 @@ genom_event
 InitStart(const char *objectPath,
           const objectdetection_RightCameraParameters *RightCameraParameters,
           const objectdetection_Detections *Detections,
-          genom_context self)
+          int32_t *stopflag, genom_context self)
 {
     int i, j, count;
     char *inputPath=NULL;
@@ -54,6 +54,8 @@ InitStart(const char *objectPath,
 
     uint32_t NobjectNames=0;
     char **objectNames, **tmpobjectNames;
+
+    *stopflag = 0;
 
     //Check if path ends with /, if not add it.
     if(objectPath[strlen(objectPath)-1] == '/')
@@ -271,7 +273,7 @@ ExecStart(const objectdetection_CameraL *CameraL,
           const objectdetection_inObjectsR *inObjectsR,
           uint16_t frameHistory,
           const objectdetection_Detections *Detections,
-          genom_context self)
+          int32_t stopflag, genom_context self)
 {
     int i, j, k, l;
     float objectWidth, objectHeight;
@@ -408,8 +410,8 @@ ExecStart(const objectdetection_CameraL *CameraL,
     //Write on the port.
     Detections->write(self);
         
-
-    if(cv::waitKey(30) == -1)
+    cv::waitKey(30);
+    if(!stopflag)
     {
         return objectdetection_exec;
     }

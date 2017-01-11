@@ -76,6 +76,9 @@ component objectdetection{
     port in calibrationParameters::sensor_msgs__CameraInfo RightCameraParameters;
     port out triangulation::Frame Detections;
 
+    ids {
+      long stopflag;
+    };
 
     task FindObjects{
         period      33 ms;
@@ -86,12 +89,16 @@ component objectdetection{
     activity Start(in string objectPath = "/tmp/objects/",
                    in unsigned short frameHistory = 5  : "Number of frames to publish on the port.")
     {
-        codel<start> InitStart(local in objectPath, port in RightCameraParameters, port out Detections) yield exec, ether;
+      codel<start> InitStart(local in objectPath, port in RightCameraParameters, port out Detections, out stopflag) yield exec, ether;
         codel<exec> ExecStart(port in CameraL, port in inObjectsL,
                               port in CameraR, port in inObjectsR,
-                              local in frameHistory, port out Detections) yield exec, ether;
+                              local in frameHistory, port out Detections, in stopflag) yield exec, ether;
 
         task FindObjects;
+    };
+
+    function Stop() {
+      codel codelStop(out stopflag);
     };
 };
 
